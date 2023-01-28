@@ -1,0 +1,19 @@
+#chat-window {
+    height: 40rem;
+}
+
+#chat-window-messages {
+    height: 38rem;
+    overflow: auto;
+    display: flex;
+    flex-direction: column-reverse;
+}
+
+.scroll__scroll-default {
+    display: block;
+}
+
+.scroll__scroll-reversed {
+    display: flex;
+    flex-direction: column-reverse;
+}

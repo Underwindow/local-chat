@@ -1,0 +1,29 @@
+.room {
+  height: 100px;
+  min-height: 100px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  background-color: lightgray;
+  border-radius: 8px;
+  padding: 0.6em 1.2em;
+  gap: 20px;
+
+  &__title {
+    text-align: center;
+    color: black;
+  }
+
+  &__options {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+
+    button {
+      display: flex;
+      justify-content: center;
+      width: 40%;
+      flex-basis: 50%;
+    }
+  }
+}
