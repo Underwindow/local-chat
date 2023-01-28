@@ -9,11 +9,11 @@ import Typography from '@mui/material/Typography'
 import Container from '@mui/material/Container'
 import { styled } from '@mui/material/styles'
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar'
-import { useAppDispatch, useAppSelector } from '@/utils/redux';
+import { useAppDispatch, useAppSelector } from '@/utils/redux'
 import { sessionStorage } from '@/utils/storage'
-import { setUser } from '@/store/slices/session';
-import UserDTO from '@/model/user';
-import Sidebar from '@/components/sidebar';
+import { setUser } from '@/store/slices/session'
+import UserDTO from '@/model/user'
+import Sidebar from '@/components/sidebar'
 import Chat from '@/components/chat'
 
 const sidebarWidth: number = 320
@@ -40,16 +40,13 @@ const App: React.FC = () => {
     const userData = sessionStorage.getItem<UserDTO>('user')
     console.log(userData)
 
-    dispatch(setUser(
-      userData ?? new UserDTO(faker.name.fullName(), nanoid(8))
-    ))
+    dispatch(setUser(userData ?? new UserDTO(faker.name.fullName(), nanoid(8))))
   }, [])
 
   useEffect(() => {
     console.log(user)
 
-    if (user !== null)
-      sessionStorage.setItem<UserDTO>('user', user)
+    if (user !== null) sessionStorage.setItem<UserDTO>('user', user)
   }, [user])
 
   return (
@@ -57,7 +54,10 @@ const App: React.FC = () => {
       <CssBaseline />
       <AppBar
         position='fixed'
-        sx={{ width: `calc(100% - ${sidebarWidth}px)`, mr: `${sidebarWidth}px` }}
+        sx={{
+          width: `calc(100% - ${sidebarWidth}px)`,
+          mr: `${sidebarWidth}px`
+        }}
       >
         <Toolbar>
           <Typography variant='h6'>
@@ -65,7 +65,7 @@ const App: React.FC = () => {
           </Typography>
         </Toolbar>
       </AppBar>
-      <Sidebar width={sidebarWidth}/>
+      <Sidebar width={sidebarWidth} />
       {user && activeRoom && (
         <Box
           component='main'

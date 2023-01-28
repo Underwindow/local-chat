@@ -1,13 +1,16 @@
 import { faker } from '@faker-js/faker'
 import { Drawer, Toolbar, Button, Divider, List } from '@mui/material'
 import { nanoid } from 'nanoid'
-import React, { useState } from 'react'
-import { localStorage } from '@/utils/storage'
+import React, { useEffect, useState } from 'react'
 import RoomDTO from '@/model/room'
 import Room from '@/components/room'
 import AddIcon from '@mui/icons-material/Add'
-import { useAppDispatch, useAppSelector } from '@/utils/redux';
-import { setActiveRoom } from '@/store/slices/session';
+import { useAppDispatch, useAppSelector } from '@/utils/redux'
+import { setActiveRoom, setChats } from '@/store/slices/session'
+import * as Automerge from '@automerge/automerge'
+import useEffectOnce from '@/utils/useEffectOnce'
+import { ChatsDoc } from '@/model/doc'
+import { updateDoc } from '@/utils/automerge'
 
 type Props = {
   width: number
@@ -16,21 +19,48 @@ type Props = {
 const Sidebar: React.FC<Props> = ({ width }) => {
   const dispatch = useAppDispatch()
   const activeRoom = useAppSelector((state) => state.session.activeRoom)
+  const chats = useAppSelector((state) => state.session.chats)
+  const [channel, setChannel] = useState<BroadcastChannel | null>(null)
 
-  const [rooms, setRooms] = useState<RoomDTO[]>(
-    localStorage.getItem('rooms') ?? []
-  )
+  useEffectOnce(() => {
+    setChannel(new BroadcastChannel('chats'))
+
+    return () => {
+      console.log('channel close')
+      channel?.close()
+    }
+  })
+
+  useEffect(() => {
+    if (channel) {
+      channel.onmessage = onMessageListener
+    }
+    return () => {
+      channel?.removeEventListener('message', onMessageListener)
+    }
+  }, [channel])
+
+  const onMessageListener = (ev: MessageEvent) => {
+    const newChats = Automerge.merge<ChatsDoc>(Automerge.load(ev.data), chats)
+    console.log('onmessage', newChats)
+    dispatch(setChats(newChats))
+  }
 
   function handleCreateRoomClick(): void {
-    setRooms(() => {
-      const newRooms = [
-        ...rooms,
-        { title: faker.company.bsNoun(), id: nanoid(6) }
-      ]
+    if (!channel) return
 
-      localStorage.setItem<RoomDTO[]>('rooms', newRooms)
-      return newRooms
-    })
+    const newChats = Automerge.change<ChatsDoc>(
+      chats,
+      'Add chat',
+      (currChats) => {
+        if (!currChats.chats) currChats.chats = []
+
+        currChats.chats.push({ title: faker.company.bsNoun(), id: nanoid(6) })
+      }
+    )
+
+    updateDoc(newChats, channel)
+    dispatch(setChats(newChats))
   }
 
   function handleEntryRoom(room: RoomDTO) {
@@ -39,12 +69,21 @@ const Sidebar: React.FC<Props> = ({ width }) => {
   }
 
   function handleDeleteRoom(id: string): void {
-    setRooms(() => {
-      const newRooms = rooms.filter((room) => room.id !== id)
+    if (!channel) return
 
-      localStorage.setItem<RoomDTO[]>('rooms', newRooms)
-      return newRooms
-    })
+    const newChats = Automerge.change<ChatsDoc>(
+      chats,
+      'Delete chat',
+      (currChats) => {
+        const itemImdex = currChats.chats.findIndex((chat) => chat.id === id)
+        if (itemImdex !== -1) {
+          currChats.chats.splice(itemImdex, 1)
+        }
+      }
+    )
+
+    updateDoc(newChats, channel)
+    dispatch(setChats(newChats))
   }
 
   return (
@@ -74,16 +113,17 @@ const Sidebar: React.FC<Props> = ({ width }) => {
       <Divider />
       <List component='nav'>
         <React.Fragment>
-          {rooms.map((room) => (
-            <Room
-              key={room.id}
-              onEntry={() => handleEntryRoom(room)}
-              onDelete={() => handleDeleteRoom(room.id)}
-              isSelected={activeRoom?.id === room.id}
-            >
-              {room.title}
-            </Room>
-          ))}
+          {chats?.chats &&
+            chats.chats.map((chats) => (
+              <Room
+                key={chats.id}
+                onEntry={() => handleEntryRoom(chats)}
+                onDelete={() => handleDeleteRoom(chats.id)}
+                isSelected={activeRoom?.id === chats.id}
+              >
+                {chats.title}
+              </Room>
+            ))}
         </React.Fragment>
       </List>
     </Drawer>

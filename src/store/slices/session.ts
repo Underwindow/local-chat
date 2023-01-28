@@ -1,16 +1,19 @@
+import { ChatsDoc } from '@/model/doc';
 import RoomDTO from '@/model/room';
 import UserDTO from '@/model/user';
-import { createSlice } from '@reduxjs/toolkit'
-import type { PayloadAction } from '@reduxjs/toolkit'
+import { PayloadAction, createSlice } from '@reduxjs/toolkit';
+import * as Automerge from '@automerge/automerge'
 
 export interface AppState {
   user: UserDTO | null,
   activeRoom: RoomDTO | null,
+  chats: ChatsDoc
 }
 
 const initialState: AppState = {
   user: null,
-  activeRoom: null
+  activeRoom: null,
+  chats: Automerge.init<ChatsDoc>(),
 }
 
 export const sessionSlice = createSlice({
@@ -23,8 +26,11 @@ export const sessionSlice = createSlice({
     setActiveRoom: (state, action: PayloadAction<RoomDTO>) => {
       state.activeRoom = action.payload
     },
+    setChats: (state, action: PayloadAction<ChatsDoc>) => {
+      state.chats = action.payload
+    },
   },
 })
 
 // Action creators are generated for each case reducer function
-export const { setUser, setActiveRoom } = sessionSlice.actions
+export const { setUser, setActiveRoom, setChats } = sessionSlice.actions

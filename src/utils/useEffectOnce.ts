@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 
-export default function useEffectOnce(fn: () => (() => void | void)) {
+export default function useEffectOnce(fn: () => (() => void) | void) {
   const ref = useRef(false)
   useEffect(() => {
     if (ref.current) {

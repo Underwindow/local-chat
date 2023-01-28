@@ -17,8 +17,9 @@ import './chat.scss'
 import SendIcon from '@mui/icons-material/Send'
 import useEffectOnce from '@/utils/useEffectOnce'
 import RoomDTO from '@/model/room'
-import AttachFileIcon from '@mui/icons-material/AttachFile';
-import ChatMessageDTO from '@/model/chat-message';
+import AttachFileIcon from '@mui/icons-material/AttachFile'
+import ChatMessageDTO from '@/model/chat-message'
+import Bubble from '@/components/bubble'
 
 type Props = {
   username: string
@@ -87,11 +88,9 @@ const Chat: React.FC<Props> = ({ ...props }) => {
   }
 
   const listChatMessages = chatMessages.map((chatMessageDto) => (
-    <ListItem key={chatMessageDto.id}>
-      <ListItemText
-        primary={`${chatMessageDto.user}: ${chatMessageDto.message}`}
-      />
-    </ListItem>
+    <Bubble key={chatMessageDto.id}>
+      {`${chatMessageDto.user}: ${chatMessageDto.message}`}
+    </Bubble>
   ))
 
   return (
@@ -106,66 +105,6 @@ const Chat: React.FC<Props> = ({ ...props }) => {
             <Grid container spacing={4} alignItems='center'>
               <Grid id='chat-window' xs={12} item>
                 <List id='chat-window-messages'>
-                  <ListItem>
-                    <ListItemText primary={`sdsdssdsdsd`} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary={`sdsdssdsdsd`}
-                      secondary={'sdsdds'}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={`sdsdssdsdsd`} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={`sdsdssdsdsd`} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={`sdsdssdsdsd`} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary={`sdsdssdsdsd`}
-                      secondary={'sdsdds'}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={`sdsdssdsdsd`} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={`sdsdssdsdsd`} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={`sdsdssdsdsd`} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary={`sdsdssdsdsd`}
-                      secondary={'sdsdds'}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={`sdsdssdsdsd`} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={`sdsdssdsdsd`} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={`sdsdssdsdsd`} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText
-                      primary={`sdsdssdsdsd`}
-                      secondary={'sdsdds'}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={`sdsdssdsdsd`} />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText primary={`sdsdssdsdsd`} />
-                  </ListItem>
                   {listChatMessages}
                 </List>
               </Grid>
