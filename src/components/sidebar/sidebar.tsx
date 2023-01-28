@@ -2,14 +2,14 @@ import { faker } from '@faker-js/faker'
 import { Drawer, Toolbar, Button, Divider, List } from '@mui/material'
 import { nanoid } from 'nanoid'
 import React, { useEffect, useState } from 'react'
-import RoomDTO from '@/model/room'
+import RoomDto from '@/model/room'
 import Room from '@/components/room'
 import AddIcon from '@mui/icons-material/Add'
 import { useAppDispatch, useAppSelector } from '@/utils/redux'
 import { setActiveRoom, setChats } from '@/store/slices/session'
 import * as Automerge from '@automerge/automerge'
 import useEffectOnce from '@/utils/useEffectOnce'
-import { ChatsDoc } from '@/model/doc'
+import { ChatsDoc } from '@/model/chats-doc'
 import { updateDoc } from '@/utils/automerge'
 
 type Props = {
@@ -41,6 +41,8 @@ const Sidebar: React.FC<Props> = ({ width }) => {
   }, [channel])
 
   const onMessageListener = (ev: MessageEvent) => {
+    console.log('ev.data', ev.data);
+    
     const newChats = Automerge.merge<ChatsDoc>(Automerge.load(ev.data), chats)
     console.log('onmessage', newChats)
     dispatch(setChats(newChats))
@@ -63,7 +65,7 @@ const Sidebar: React.FC<Props> = ({ width }) => {
     dispatch(setChats(newChats))
   }
 
-  function handleEntryRoom(room: RoomDTO) {
+  function handleEntryRoom(room: RoomDto) {
     console.log('EntryRoomClicked', room.id)
     dispatch(setActiveRoom(room))
   }

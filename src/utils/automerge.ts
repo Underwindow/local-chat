@@ -3,6 +3,6 @@ import { localStorage } from '@/utils/storage'
 
 export function updateDoc<T>(newDoc: Automerge.Doc<T>, channel: BroadcastChannel) {
   let binary = Automerge.save(newDoc)
-  localStorage.setItem(channel.name, binary)
+  localStorage.setItem(channel.name, Array.from(binary))
   channel.postMessage(binary)
 }

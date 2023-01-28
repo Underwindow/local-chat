@@ -5,8 +5,6 @@ import {
   Grid,
   IconButton,
   List,
-  ListItem,
-  ListItemText,
   Paper,
   TextField,
   Typography
@@ -16,21 +14,23 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import './chat.scss'
 import SendIcon from '@mui/icons-material/Send'
 import useEffectOnce from '@/utils/useEffectOnce'
-import RoomDTO from '@/model/room'
+import RoomDto from '@/model/room'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
-import ChatMessageDTO from '@/model/chat-message'
+import ChatMessage from '@/model/chat-message'
 import Bubble from '@/components/bubble'
+import * as Automerge from '@automerge/automerge'
+import { ChatsDoc } from '@/model/chats-doc';
 
 type Props = {
   username: string
-  roomData: RoomDTO
+  roomData: RoomDto
 }
 
 const Chat: React.FC<Props> = ({ ...props }) => {
-  const ENTER_KEY_CODE = 13
+  const ENTER_KEY_CODE = 'Enter'
 
   const webSocket = useRef<WebSocket>(new WebSocket('ws://localhost:8080/chat'))
-  const [chatMessages, setChatMessages] = useState<ChatMessageDTO[]>([])
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [message, setMessage] = useState('')
 
   useEffectOnce(() => {
@@ -52,7 +52,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
 
   useEffect(() => {
     webSocket.current.onmessage = (event) => {
-      const chatMessageDto = JSON.parse(event.data) as ChatMessageDTO
+      const chatMessageDto = JSON.parse(event.data) as ChatMessage
       console.log('Message:', chatMessageDto)
       setChatMessages([
         ...chatMessages,
@@ -72,18 +72,32 @@ const Chat: React.FC<Props> = ({ ...props }) => {
   }
 
   const handleEnterKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.keyCode === ENTER_KEY_CODE) {
+    if (event.key === ENTER_KEY_CODE) {
       sendMessage()
     }
   }
 
   const sendMessage = () => {
     if (message !== '') {
+      // webSocket.current.send(
+      //   JSON.stringify(new ChatMessage(props.username, message))
+      // )
+      // setMessage('')
+      
+      // const newChats = Automerge.change<ChatsDoc>(
+      //   chats,
+      //   'Delete chat',
+      //   (currChats) => {
+      //     const itemImdex = currChats.chats.findIndex((chat) => chat.id === id)
+      //     if (itemImdex !== -1) {
+      //       currChats.chats.splice(itemImdex, 1)
+      //     }
+      //   }
+      // )
+  
+      // updateDoc(newChats, channel)
+
       console.log('Send!')
-      webSocket.current.send(
-        JSON.stringify(new ChatMessageDTO(props.username, message))
-      )
-      setMessage('')
     }
   }
 
@@ -104,9 +118,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
             <Divider />
             <Grid container spacing={4} alignItems='center'>
               <Grid id='chat-window' xs={12} item>
-                <List id='chat-window-messages'>
-                  {listChatMessages}
-                </List>
+                <List id='chat-window-messages'>{listChatMessages}</List>
               </Grid>
               <Grid xs={1} item>
                 <IconButton

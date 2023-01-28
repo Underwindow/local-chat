@@ -10,11 +10,14 @@ import Container from '@mui/material/Container'
 import { styled } from '@mui/material/styles'
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from '@mui/material/AppBar'
 import { useAppDispatch, useAppSelector } from '@/utils/redux'
-import { sessionStorage } from '@/utils/storage'
-import { setUser } from '@/store/slices/session'
-import UserDTO from '@/model/user'
+import { localStorage, sessionStorage } from '@/utils/storage'
+import { setChats, setUser } from '@/store/slices/session'
+import User from '@/model/user'
 import Sidebar from '@/components/sidebar'
 import Chat from '@/components/chat'
+import useEffectOnce from '@/utils/useEffectOnce'
+import { ChatsDoc } from '@/model/chats-doc'
+import * as Automerge from '@automerge/automerge'
 
 const sidebarWidth: number = 320
 
@@ -36,17 +39,33 @@ const App: React.FC = () => {
   const user = useAppSelector((state) => state.session.user)
   const activeRoom = useAppSelector((state) => state.session.activeRoom)
 
+  useEffectOnce(() => {
+    const chatsDocJsonBinary = localStorage.getItem<[]>('chats')
+    console.log('chatsDocBinary', chatsDocJsonBinary);
+    
+    if (chatsDocJsonBinary) {
+      const chatsDocBinary = new Uint8Array(chatsDocJsonBinary)
+      console.log('chatsDocBinary', chatsDocBinary);
+
+      const chatsDoc = Automerge.load<ChatsDoc>(chatsDocBinary)
+      console.log('chatsDoc from binary', chatsDoc);
+      dispatch(setChats(chatsDoc))
+    }
+  })
+
   useEffect(() => {
-    const userData = sessionStorage.getItem<UserDTO>('user')
+    const userData = sessionStorage.getItem<User>('user')
     console.log(userData)
 
-    dispatch(setUser(userData ?? new UserDTO(faker.name.fullName(), nanoid(8))))
+    dispatch(
+      setUser(userData ?? { name: faker.name.fullName(), id: nanoid(8) })
+    )
   }, [])
 
   useEffect(() => {
     console.log(user)
 
-    if (user !== null) sessionStorage.setItem<UserDTO>('user', user)
+    if (user !== null) sessionStorage.setItem<User>('user', user)
   }, [user])
 
   return (
