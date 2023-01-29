@@ -1,7 +1,21 @@
 .bubble {
   &__image {
-    width: 300px;
-    height: 300px;
-    object-fit: contain;
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+  }
+
+  &__reply {
+    cursor: pointer;
+  }
+
+  &__reply:hover {
+    color: #757ce8;
+    &::before{
+      content: "\'";
+    }
+    &::after{
+      content: "\' Move to original";
+    }
   }
 }

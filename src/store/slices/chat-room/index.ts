@@ -2,10 +2,17 @@ import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import * as Automerge from '@automerge/automerge';
 import User from '@/model/user';
 
+export interface Reply {
+  messageId: string;
+  username: string;
+  text: string;
+  // anchorEl: HTMLElement
+}
+
 export interface MessageContent {
   text: string;
   image: string | null;
-  quote: ChatMessage | null;
+  reply: Reply | null;
 }
 
 export interface ChatMessage {

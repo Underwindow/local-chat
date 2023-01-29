@@ -13,7 +13,7 @@ const convertBase64 = (file: File) => {
   });
 };
 
-type ResolvedImage = {
+export type ResolvedImage = {
   fileName: string;
   base64: ArrayBuffer | string | null;
 };

@@ -1,4 +1,5 @@
 import {
+  AppBar,
   Container,
   Divider,
   FormControl,
@@ -7,38 +8,43 @@ import {
   List,
   Paper,
   TextField,
+  Toolbar,
   Typography
 } from '@mui/material'
 import { Box } from '@mui/system'
 import { Fragment, useEffect, useState } from 'react'
 import './chat.scss'
 import SendIcon from '@mui/icons-material/Send'
-import PhotoCamera from '@mui/icons-material/PhotoCamera'
+import CloseIcon from '@mui/icons-material/Close'
 import Bubble from '@/components/bubble'
 import * as Automerge from '@automerge/automerge'
 import { ChatRoom } from '@/store/slices/chats'
-import { ChatRoomDoc, setChatRoom } from '@/store/slices/chat-room'
+import { ChatRoomDoc, Reply, setChatRoom } from '@/store/slices/chat-room'
 import { useAppDispatch, useAppSelector } from '@/utils/redux'
 import { nanoid } from 'nanoid'
 import { loadDoc, updateDoc } from '@/utils/automerge'
 import dateFormat from '@/utils/dateFormat'
 import { localStorageJSON } from '@/utils/storage'
 import IconFileUpload from '@/components/icon-file-upload'
-import uploadImage from '@/utils/uploadImage'
+import uploadImage, { ResolvedImage } from '@/utils/uploadImage'
 
 type Props = {
   username: string
   roomData: ChatRoom
 }
 
-const Chat: React.FC<Props> = ({ ...props }) => {
-  const ENTER_KEY_CODE = 'Enter'
+const ENTER_KEY_CODE = 'Enter'
 
+const Chat: React.FC<Props> = ({ ...props }) => {
   const dispatch = useAppDispatch()
   const user = useAppSelector((state) => state.sessionState.user)
   const activeRoom = useAppSelector((state) => state.sessionState.activeRoom)
   const chatRoom = useAppSelector((state) => state.chatRoomState.chatRoom)
+
   const [channel, setChannel] = useState<BroadcastChannel | null>(null)
+  const [message, setMessage] = useState('')
+  const [msgImage, setMsgImage] = useState<ResolvedImage | null>(null)
+  const [reply, setReply] = useState<Reply | null>(null)
 
   useEffect(() => {
     console.log('activeRoom useEffect', props.roomData.id)
@@ -72,9 +78,6 @@ const Chat: React.FC<Props> = ({ ...props }) => {
     dispatch(setChatRoom(newChatRoom))
   }
 
-  const [message, setMessage] = useState('')
-  const [msgImage, setMsgImage] = useState<string | null>(null)
-
   const handleMessageChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -82,11 +85,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
   }
 
   const handleMsgImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    uploadImage(event).then((image) => {
-      if (image.base64) {
-        setMsgImage(image.base64 as string)
-      }
-    })
+    uploadImage(event).then((image) => setMsgImage(image))
   }
 
   const handleEnterKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -97,21 +96,23 @@ const Chat: React.FC<Props> = ({ ...props }) => {
 
   const sendMessage = () => {
     if (!channel) return
-
     if (message !== '' || msgImage !== null) {
+      console.log('here')
+
       const newChatRoom = Automerge.change<ChatRoomDoc>(
         chatRoom,
         'Send Message',
         (currChatRoom) => {
           if (!currChatRoom.messages) currChatRoom.messages = []
+          console.log('reply', reply)
 
           currChatRoom.messages.unshift({
             id: nanoid(6),
             user: user!,
             contents: {
               text: message,
-              image: msgImage,
-              quote: null
+              image: (msgImage?.base64 as string) ?? null,
+              reply: reply
             },
             date: dateFormat(new Date())
           })
@@ -121,20 +122,27 @@ const Chat: React.FC<Props> = ({ ...props }) => {
       updateDoc(newChatRoom, channel)
       dispatch(setChatRoom(newChatRoom))
       setMessage('')
+      setReply(null)
       setMsgImage(null)
-      console.log('Send!')
+      console.log('Sent!')
     }
   }
 
-  const listChatMessages = chatRoom.messages?.map((message) => {
-    const sender = user?.id === message.user.id ? 'Me' : message.user.name
-
-    return (
-      <Bubble key={message.id} date={message.date} src={message.contents.image}>
-        {`${sender}: ${message.contents.text}`}
-      </Bubble>
-    )
-  })
+  const listChatMessages = chatRoom.messages?.map((message) => (
+    <Bubble
+      id={message.id}
+      key={message.id}
+      message={message}
+      onReply={(reply) => setReply(reply)}
+      onMoveToReply={(reply) => {
+        const replyEl = document.getElementById(reply.messageId)
+        replyEl?.scrollIntoView({
+          behavior: 'smooth',
+          inline: 'nearest'
+        })
+      }}
+    />
+  ))
 
   return (
     <Fragment>
@@ -145,39 +153,71 @@ const Chat: React.FC<Props> = ({ ...props }) => {
               Room: {props.roomData.title} {props.roomData.id}
             </Typography>
             <Divider />
-            <Grid container spacing={4} alignItems='center'>
-              <Grid id='chat-window' xs={12} item>
-                <List id='chat-window-messages'>{listChatMessages}</List>
-              </Grid>
-              <Grid xs={1} item>
-                <IconFileUpload
-                  accept='image/png, image/jpeg'
-                  onChange={handleMsgImageChange}
-                />
-              </Grid>
-              <Grid xs={10} item>
-                <FormControl fullWidth>
+            <FormControl fullWidth>
+              <Grid container spacing={4} alignItems='center'>
+                <Grid id='chat-window' xs={12} item>
+                  <List id='chat-window-messages'>{listChatMessages}</List>
+                </Grid>
+                <Grid xs={1} item>
+                  <IconFileUpload
+                    accept='image/png, image/jpeg'
+                    onChange={handleMsgImageChange}
+                  />
+                </Grid>
+                <Grid
+                  sx={{ position: 'relative' }}
+                  style={{ paddingLeft: 0 }}
+                  xs={10}
+                  item
+                >
+                  {reply && (
+                    <Box
+                      id='reply-window'
+                      sx={{
+                        backgroundColor: 'white'
+                      }}
+                    >
+                      <AppBar position='relative' color='transparent'>
+                        <Toolbar>
+                          <Typography
+                            variant='h6'
+                            component='div'
+                            overflow='hidden'
+                            noWrap
+                          >
+                            Replay to: {reply?.username}
+                          </Typography>
+                          <Box sx={{ flexGrow: 1 }} />
+                          <IconButton onClick={() => setReply(null)}>
+                            <CloseIcon />
+                          </IconButton>
+                        </Toolbar>
+                      </AppBar>
+                    </Box>
+                  )}
+
                   <TextField
+                    fullWidth
                     onChange={handleMessageChange}
                     onKeyDown={(e) => handleEnterKey(e)}
                     value={message}
                     label='Type your message...'
+                    helperText={msgImage?.fileName}
                     variant='outlined'
-                    required
                   />
-                </FormControl>
+                </Grid>
+                <Grid xs={1} item>
+                  <IconButton
+                    onClick={sendMessage}
+                    aria-label='send'
+                    color='primary'
+                    disabled={message === '' && msgImage === null}
+                  >
+                    <SendIcon />
+                  </IconButton>
+                </Grid>
               </Grid>
-              <Grid xs={1} item>
-                <IconButton
-                  onClick={sendMessage}
-                  aria-label='send'
-                  color='primary'
-                  disabled={message === '' && msgImage === null}
-                >
-                  <SendIcon />
-                </IconButton>
-              </Grid>
-            </Grid>
+            </FormControl>
           </Box>
         </Paper>
       </Container>

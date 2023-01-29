@@ -64,17 +64,25 @@ const App: React.FC = () => {
       </AppBar>
       <Sidebar width={sidebarWidth} />
       {user && activeRoom && (
-        <Box
-          component='main'
-          sx={{
-            flexBasis: '50%'
+        <div
+          style={{
+            width: `calc(100% - ${sidebarWidth}px)`,
+            marginRight: sidebarWidth,
+            marginLeft: -sidebarWidth
           }}
         >
-          <Toolbar />
-          <Container maxWidth='lg' sx={{ mt: 4, mb: 4 }}>
-            <Chat roomData={activeRoom} username={user.name} />
-          </Container>
-        </Box>
+          <Box
+            component='main'
+            sx={{
+              flexBasis: '50%'
+            }}
+          >
+            <Toolbar />
+            <Container maxWidth='lg' sx={{ mt: 4 }}>
+              <Chat roomData={activeRoom} username={user.name} />
+            </Container>
+          </Box>
+        </div>
       )}
     </Box>
   )
