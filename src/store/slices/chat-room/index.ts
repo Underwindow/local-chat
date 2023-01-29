@@ -1,12 +1,11 @@
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
-import * as Automerge from '@automerge/automerge'
+import * as Automerge from '@automerge/automerge';
 import User from '@/model/user';
-import Base64 from '@/typings/base64';
 
 export interface MessageContent {
-  text: string 
-  image?: Base64<'png'>
-  quote?: ChatMessage
+  text: string;
+  image: string | null;
+  quote: ChatMessage | null;
 }
 
 export interface ChatMessage {
@@ -21,22 +20,22 @@ export interface ChatRoomDoc {
 }
 
 export interface ChatRoomState {
-  chatRoom: ChatRoomDoc
+  chatRoom: ChatRoomDoc;
 }
 
 const initialState: ChatRoomState = {
   chatRoom: Automerge.init<ChatRoomDoc>(),
-}
+};
 
 export const chatRoomSlice = createSlice({
   name: 'chat-room',
   initialState,
   reducers: {
     setChatRoom: (state, action: PayloadAction<ChatRoomDoc>) => {
-      state.chatRoom = action.payload
+      state.chatRoom = action.payload;
     },
   },
-})
+});
 
 // Action creators are generated for each case reducer function
-export const { setChatRoom } = chatRoomSlice.actions
+export const { setChatRoom } = chatRoomSlice.actions;

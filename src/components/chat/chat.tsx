@@ -13,8 +13,7 @@ import { Box } from '@mui/system'
 import { Fragment, useEffect, useState } from 'react'
 import './chat.scss'
 import SendIcon from '@mui/icons-material/Send'
-import useEffectOnce from '@/utils/useEffectOnce'
-import AttachFileIcon from '@mui/icons-material/AttachFile'
+import PhotoCamera from '@mui/icons-material/PhotoCamera'
 import Bubble from '@/components/bubble'
 import * as Automerge from '@automerge/automerge'
 import { ChatRoom } from '@/store/slices/chats'
@@ -24,6 +23,8 @@ import { nanoid } from 'nanoid'
 import { loadDoc, updateDoc } from '@/utils/automerge'
 import dateFormat from '@/utils/dateFormat'
 import { localStorageJSON } from '@/utils/storage'
+import IconFileUpload from '@/components/icon-file-upload'
+import uploadImage from '@/utils/uploadImage'
 
 type Props = {
   username: string
@@ -72,11 +73,20 @@ const Chat: React.FC<Props> = ({ ...props }) => {
   }
 
   const [message, setMessage] = useState('')
+  const [msgImage, setMsgImage] = useState<string | null>(null)
 
   const handleMessageChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setMessage(event.target.value)
+  }
+
+  const handleMsgImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    uploadImage(event).then((image) => {
+      if (image.base64) {
+        setMsgImage(image.base64 as string)
+      }
+    })
   }
 
   const handleEnterKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -88,7 +98,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
   const sendMessage = () => {
     if (!channel) return
 
-    if (message !== '') {
+    if (message !== '' || msgImage !== null) {
       const newChatRoom = Automerge.change<ChatRoomDoc>(
         chatRoom,
         'Send Message',
@@ -99,7 +109,9 @@ const Chat: React.FC<Props> = ({ ...props }) => {
             id: nanoid(6),
             user: user!,
             contents: {
-              text: message
+              text: message,
+              image: msgImage,
+              quote: null
             },
             date: dateFormat(new Date())
           })
@@ -109,15 +121,20 @@ const Chat: React.FC<Props> = ({ ...props }) => {
       updateDoc(newChatRoom, channel)
       dispatch(setChatRoom(newChatRoom))
       setMessage('')
+      setMsgImage(null)
       console.log('Send!')
     }
   }
 
-  const listChatMessages = chatRoom.messages?.map((message) => (
-    <Bubble key={message.id} date={message.date}>
-      {`${message.user.name}: ${message.contents.text}`}
-    </Bubble>
-  ))
+  const listChatMessages = chatRoom.messages?.map((message) => {
+    const sender = user?.id === message.user.id ? 'Me' : message.user.name
+
+    return (
+      <Bubble key={message.id} date={message.date} src={message.contents.image}>
+        {`${sender}: ${message.contents.text}`}
+      </Bubble>
+    )
+  })
 
   return (
     <Fragment>
@@ -133,13 +150,10 @@ const Chat: React.FC<Props> = ({ ...props }) => {
                 <List id='chat-window-messages'>{listChatMessages}</List>
               </Grid>
               <Grid xs={1} item>
-                <IconButton
-                  onClick={sendMessage}
-                  aria-label='attach'
-                  color='primary'
-                >
-                  <AttachFileIcon />
-                </IconButton>
+                <IconFileUpload
+                  accept='image/png, image/jpeg'
+                  onChange={handleMsgImageChange}
+                />
               </Grid>
               <Grid xs={10} item>
                 <FormControl fullWidth>
@@ -158,7 +172,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
                   onClick={sendMessage}
                   aria-label='send'
                   color='primary'
-                  disabled={message === ''}
+                  disabled={message === '' && msgImage === null}
                 >
                   <SendIcon />
                 </IconButton>
