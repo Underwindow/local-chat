@@ -17,6 +17,7 @@ export default defineConfig(({ command, mode }) => {
     define: {
       __CHATS_LS__: JSON.stringify(process.env.VITE_CHATS_LS.trim()),
       __USER_SS__: JSON.stringify(process.env.VITE_USER_SS.trim()),
+      __USERS_LS__: JSON.stringify(process.env.VITE_USERS_LS.trim()),
     },
     resolve: {
       alias: {

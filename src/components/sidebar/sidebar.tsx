@@ -113,7 +113,7 @@ const Sidebar: React.FC<Props> = ({ width }) => {
       <Divider />
       <List component='nav'>
         <React.Fragment>
-          {chats?.chatRooms &&
+          {chats.chatRooms &&
             chats.chatRooms.map((chats) => (
               <Room
                 key={chats.id}

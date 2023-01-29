@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import './App.scss'
 import { nanoid } from 'nanoid'
 import { faker } from '@faker-js/faker'
@@ -19,6 +19,7 @@ import useEffectOnce from '@/utils/useEffectOnce'
 import * as Automerge from '@automerge/automerge'
 import { ChatsDoc, setChats } from '@/store/slices/chats'
 import { loadDoc } from '@/utils/automerge'
+import UsersDialog from '@/components/users-dialog';
 
 const sidebarWidth: number = 320
 
@@ -37,13 +38,13 @@ const App: React.FC = () => {
       dispatch(setChats(doc))
     )
 
-    let userData = sessionStorageJSON.getItem<User>(__USER_SS__)
-    if (userData === null) {
-      userData = { name: faker.name.fullName(), id: nanoid(8) }
-      sessionStorageJSON.setItem<User>(__USER_SS__, userData)
-    }
+    // let userData = sessionStorageJSON.getItem<User>(__USER_SS__)
+    // if (userData === null) {
+    //   userData = { name: faker.name.fullName(), id: nanoid(8) }
+    //   sessionStorageJSON.setItem<User>(__USER_SS__, userData)
+    // }
 
-    dispatch(setUser(userData))
+    // dispatch(setUser(userData))
   })
 
   return (
@@ -62,7 +63,8 @@ const App: React.FC = () => {
           </Typography>
         </Toolbar>
       </AppBar>
-      <Sidebar width={sidebarWidth} />
+      {!user && <UsersDialog open={user === null} />}
+      {user && <Sidebar width={sidebarWidth} />}
       {user && activeRoom && (
         <div
           style={{
