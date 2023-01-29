@@ -18,6 +18,7 @@ import Chat from '@/components/chat'
 import useEffectOnce from '@/utils/useEffectOnce'
 import * as Automerge from '@automerge/automerge'
 import { ChatsDoc, setChats } from '@/store/slices/chats'
+import { loadDoc } from '@/utils/automerge'
 
 const sidebarWidth: number = 320
 
@@ -32,29 +33,18 @@ const App: React.FC = () => {
   const activeRoom = useAppSelector((state) => state.sessionState.activeRoom)
 
   useEffectOnce(() => {
-    const chatsDocJsonBinary = localStorageJSON.getItem<[]>(__CHATS_LS__)
-
-    if (chatsDocJsonBinary) {
-      const chatsDocBinary = new Uint8Array(chatsDocJsonBinary)
-      const chatsDoc = Automerge.load<ChatsDoc>(chatsDocBinary)
-      dispatch(setChats(chatsDoc))
-    }
-  })
-
-  useEffect(() => {
-    const userData = sessionStorageJSON.getItem<User>(__USER_SS__)
-    console.log(userData)
-
-    dispatch(
-      setUser(userData ?? { name: faker.name.fullName(), id: nanoid(8) })
+    loadDoc<ChatsDoc>(localStorageJSON, __CHATS_LS__, (doc) =>
+      dispatch(setChats(doc))
     )
-  }, [])
 
-  useEffect(() => {
-    console.log(user)
+    let userData = sessionStorageJSON.getItem<User>(__USER_SS__)
+    if (userData === null) {
+      userData = { name: faker.name.fullName(), id: nanoid(8) }
+      sessionStorageJSON.setItem<User>(__USER_SS__, userData)
+    }
 
-    if (user !== null) sessionStorageJSON.setItem<User>(__USER_SS__, user)
-  }, [user])
+    dispatch(setUser(userData))
+  })
 
   return (
     <Box sx={{ display: 'flex' }}>

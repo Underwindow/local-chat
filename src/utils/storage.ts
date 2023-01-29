@@ -12,5 +12,13 @@ const storage = (storage: Storage) => ({
   removeItem: (keyName: string) => storage.removeItem(keyName),
 });
 
-export const localStorageJSON = storage(window.localStorage);
-export const sessionStorageJSON = storage(window.sessionStorage);
+export const localStorageJSON: StorageJSON = storage(window.localStorage);
+export const sessionStorageJSON: StorageJSON = storage(window.sessionStorage);
+
+export interface StorageJSON {
+  getItem: <T>(key: string) => T | null,
+  setItem: <T>(keyName: string, keyValue: T) => void,
+  clear: () => void,
+  key: (index: number) => string | null,
+  removeItem: (keyName: string) => void
+}

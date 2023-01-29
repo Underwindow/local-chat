@@ -12,6 +12,7 @@ export interface MessageContent {
 export interface ChatMessage {
   id: string;
   user: User;
+  date: string;
   contents: MessageContent;
 }
 

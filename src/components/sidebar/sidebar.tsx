@@ -40,7 +40,6 @@ const Sidebar: React.FC<Props> = ({ width }) => {
   }, [channel])
 
   const onMessageListener = (ev: MessageEvent) => {
-    console.log('ev.data', ev.data);
     
     const newChats = Automerge.merge<ChatsDoc>(Automerge.load(ev.data), chats)
     console.log('onmessage', newChats)

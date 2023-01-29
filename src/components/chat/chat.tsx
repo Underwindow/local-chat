@@ -10,16 +10,20 @@ import {
   Typography
 } from '@mui/material'
 import { Box } from '@mui/system'
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 import './chat.scss'
 import SendIcon from '@mui/icons-material/Send'
 import useEffectOnce from '@/utils/useEffectOnce'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
 import Bubble from '@/components/bubble'
 import * as Automerge from '@automerge/automerge'
-// import { ChatsDoc } from '@/store/slices/chats/chats-doc.model';
-import { ChatRoom } from '@/store/slices/chats';
-import { ChatMessage } from '@/store/slices/chat-room';
+import { ChatRoom } from '@/store/slices/chats'
+import { ChatRoomDoc, setChatRoom } from '@/store/slices/chat-room'
+import { useAppDispatch, useAppSelector } from '@/utils/redux'
+import { nanoid } from 'nanoid'
+import { loadDoc, updateDoc } from '@/utils/automerge'
+import dateFormat from '@/utils/dateFormat'
+import { localStorageJSON } from '@/utils/storage'
 
 type Props = {
   username: string
@@ -29,41 +33,45 @@ type Props = {
 const Chat: React.FC<Props> = ({ ...props }) => {
   const ENTER_KEY_CODE = 'Enter'
 
-  const webSocket = useRef<WebSocket>(new WebSocket('ws://localhost:8080/chat'))
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
-  const [message, setMessage] = useState('')
+  const dispatch = useAppDispatch()
+  const user = useAppSelector((state) => state.sessionState.user)
+  const activeRoom = useAppSelector((state) => state.sessionState.activeRoom)
+  const chatRoom = useAppSelector((state) => state.chatRoomState.chatRoom)
+  const [channel, setChannel] = useState<BroadcastChannel | null>(null)
 
-  useEffectOnce(() => {
-    console.log('Opening WebSocket')
+  useEffect(() => {
+    console.log('activeRoom useEffect', props.roomData.id)
+    setChannel(new BroadcastChannel(props.roomData.id))
 
-    webSocket.current.onopen = (event) => {
-      console.log('Open:', event)
-    }
-    webSocket.current.onclose = (event) => {
-      console.log('Close:', event)
+    loadDoc<ChatRoomDoc>(localStorageJSON, activeRoom!.id, (doc) =>
+      dispatch(setChatRoom(doc))
+    )
+  }, [activeRoom])
+
+  useEffect(() => {
+    if (channel) {
+      console.log('channel onmessage sub', props.roomData.id)
+      channel.onmessage = onMessageListener
     }
 
     return () => {
-      console.log('here')
-
-      webSocket.current.close()
+      console.log('channel close', props.roomData.id)
+      channel?.removeEventListener('message', onMessageListener)
+      channel?.close()
     }
-  })
+  }, [channel])
 
-  useEffect(() => {
-    webSocket.current.onmessage = (event) => {
-      const chatMessageDto = JSON.parse(event.data) as ChatMessage
-      console.log('Message:', chatMessageDto)
-      setChatMessages([
-        ...chatMessages,
-        {
-          id: chatMessageDto.id,
-          user: chatMessageDto.user,
-          contents: chatMessageDto.contents
-        }
-      ])
-    }
-  }, [chatMessages])
+  const onMessageListener = (ev: MessageEvent) => {
+    const newChatRoom = Automerge.merge<ChatRoomDoc>(
+      Automerge.load(ev.data),
+      chatRoom
+    )
+
+    console.log('onmessage', newChatRoom)
+    dispatch(setChatRoom(newChatRoom))
+  }
+
+  const [message, setMessage] = useState('')
 
   const handleMessageChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -78,32 +86,36 @@ const Chat: React.FC<Props> = ({ ...props }) => {
   }
 
   const sendMessage = () => {
-    if (message !== '') {
-      // webSocket.current.send(
-      //   JSON.stringify(new ChatMessage(props.username, message))
-      // )
-      // setMessage('')
-      
-      // const newChats = Automerge.change<ChatsDoc>(
-      //   chats,
-      //   'Delete chat',
-      //   (currChats) => {
-      //     const itemImdex = currChats.chats.findIndex((chat) => chat.id === id)
-      //     if (itemImdex !== -1) {
-      //       currChats.chats.splice(itemImdex, 1)
-      //     }
-      //   }
-      // )
-  
-      // updateDoc(newChats, channel)
+    if (!channel) return
 
+    if (message !== '') {
+      const newChatRoom = Automerge.change<ChatRoomDoc>(
+        chatRoom,
+        'Send Message',
+        (currChatRoom) => {
+          if (!currChatRoom.messages) currChatRoom.messages = []
+
+          currChatRoom.messages.unshift({
+            id: nanoid(6),
+            user: user!,
+            contents: {
+              text: message
+            },
+            date: dateFormat(new Date())
+          })
+        }
+      )
+
+      updateDoc(newChatRoom, channel)
+      dispatch(setChatRoom(newChatRoom))
+      setMessage('')
       console.log('Send!')
     }
   }
 
-  const listChatMessages = chatMessages.map((chatMessageDto) => (
-    <Bubble key={chatMessageDto.id}>
-      {`${chatMessageDto.user}: ${chatMessageDto.contents.text}`}
+  const listChatMessages = chatRoom.messages?.map((message) => (
+    <Bubble key={message.id} date={message.date}>
+      {`${message.user.name}: ${message.contents.text}`}
     </Bubble>
   ))
 
