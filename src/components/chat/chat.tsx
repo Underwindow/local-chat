@@ -12,7 +12,7 @@ import {
   Typography
 } from '@mui/material'
 import { Box } from '@mui/system'
-import { Fragment, useEffect, useState } from 'react'
+import { FormEvent, Fragment, useEffect, useState } from 'react'
 import './chat.scss'
 import SendIcon from '@mui/icons-material/Send'
 import CloseIcon from '@mui/icons-material/Close'
@@ -104,7 +104,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
         'Send Message',
         (currChatRoom) => {
           if (!currChatRoom.messages) currChatRoom.messages = []
-          console.log('reply', reply)
+          console.log('reply message', reply, message)
 
           currChatRoom.messages.unshift({
             id: nanoid(6),
@@ -138,11 +138,16 @@ const Chat: React.FC<Props> = ({ ...props }) => {
         const replyEl = document.getElementById(reply.messageId)
         replyEl?.scrollIntoView({
           behavior: 'smooth',
-          inline: 'nearest'
+          block: 'center'
         })
       }}
     />
   ))
+
+  function handleFormSubmit(event: FormEvent<HTMLDivElement>): void {
+    event.preventDefault()
+    console.log('handleFormSubmit', event.currentTarget.nodeValue)
+  }
 
   return (
     <Fragment>
@@ -150,10 +155,10 @@ const Chat: React.FC<Props> = ({ ...props }) => {
         <Paper elevation={2}>
           <Box p={3}>
             <Typography variant='h4' gutterBottom>
-              Room: {props.roomData.title} {props.roomData.id}
+              Room: {props.roomData.title}
             </Typography>
             <Divider />
-            <FormControl fullWidth>
+            <FormControl fullWidth onSubmit={handleFormSubmit}>
               <Grid container spacing={4} alignItems='center'>
                 <Grid id='chat-window' xs={12} item>
                   <List id='chat-window-messages'>{listChatMessages}</List>

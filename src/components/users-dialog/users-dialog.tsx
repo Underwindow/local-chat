@@ -12,7 +12,7 @@ import React, { useEffect, useState } from 'react'
 import AddIcon from '@mui/icons-material/Add'
 import useEffectOnce from '@/utils/useEffectOnce'
 import * as Automerge from '@automerge/automerge'
-import { SharedUser, UsersDoc, setSharedUsers } from '@/store/slices/users'
+import { UsersDoc, setSharedUsers } from '@/store/slices/users'
 import { useAppDispatch, useAppSelector } from '@/utils/redux'
 import { faker } from '@faker-js/faker'
 import { nanoid } from 'nanoid'
@@ -29,22 +29,17 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
   const dispatch = useAppDispatch()
 
   const { open } = props
-
+  const user = useAppSelector((state) => state.sessionState.user)
   const sharedUsers = useAppSelector((state) => state.usersState.sharedUsers)
   const [channel, setChannel] = useState<BroadcastChannel | null>(null)
 
   useEffectOnce(() => {
-    let userData = sessionStorageJSON.getItem<User>(__USER_SS__)
-    if (userData !== null) {
-      dispatch(setUser(userData))
-    }
-
     loadDoc<UsersDoc>(localStorageJSON, __USERS_LS__, (doc) =>
       dispatch(setSharedUsers(doc))
     )
 
     setChannel(new BroadcastChannel(__USERS_LS__))
-
+    
     return () => {
       console.log(`${__USERS_LS__} channel close`)
       channel?.close()
@@ -69,27 +64,35 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
     dispatch(setSharedUsers(newSharedUsers))
   }
 
-  function handleListItemClick(sharedUser: SharedUser): void {
+  function setSharedUserActive(sharedUser: User, value: boolean, onSuccess?: (user: User) => void): void {
     if (!channel) return
 
-    const newSharedUsers = Automerge.change<UsersDoc>(
-      sharedUsers,
-      'Add user',
-      (currUsers) => {
-        const id = currUsers.users.findIndex((user) => user.id === sharedUser.id)
-        currUsers.users[id] = {
-          id: sharedUser.id,
-          name: sharedUser.name,
-          isActive: true,
-        }
-      }
-    )
+    const newUserState: User = {
+      id: sharedUser.id,
+      name: sharedUser.name,
+      // isActive: value,
+    }
 
-    updateDoc(newSharedUsers, channel)
-    dispatch(setSharedUsers(newSharedUsers))
+    // const newSharedUsers = Automerge.change<UsersDoc>(
+    //   sharedUsers,
+    //   'Add user',
+    //   (currUsers) => {
+    //     const id = currUsers.users.findIndex((user) => user.id === sharedUser.id)
+    //     currUsers.users[id] = newUserState
+    //   }
+    // )
 
-    sessionStorageJSON.setItem<User>(__USER_SS__, sharedUser)
-    dispatch(setUser(sharedUser))
+    if (onSuccess) onSuccess(newUserState)
+
+    // updateDoc(newSharedUsers, channel)
+    // dispatch(setSharedUsers(newSharedUsers))
+  }
+
+  function handleListItemClick(sharedUser: User): void {
+    setSharedUserActive(sharedUser, true, (user) => {
+      sessionStorageJSON.setItem<User>(__USER_SS__, user)
+      dispatch(setUser(user))
+    })
   }
 
   function handleCreateUserClick(): void {
@@ -104,7 +107,7 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
         currUsers.users.push({
           name: faker.name.fullName(), 
           id: nanoid(8),
-          isActive: false
+          // isActive: false
         })
       }
     )
@@ -114,14 +117,16 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
   }
 
   return (
-    <Dialog open={open}>
+    <Dialog open={open} sx={{visibility: !!user ? 'hidden' : 'visible' }}>
       <DialogTitle>Choose your account</DialogTitle>
       <List sx={{ pt: 0 }}>
         {sharedUsers.users &&
-          sharedUsers.users.map((sharedUser) => (
-            <ListItem key={sharedUser.id} disableGutters>
-              <ListItemButton onClick={() => handleListItemClick(sharedUser)} disabled={sharedUser.isActive}>
-                <ListItemText primary={sharedUser.name} />
+          sharedUsers.users.map((user) => (
+            <ListItem key={user.id} disableGutters>
+              <ListItemButton onClick={() => handleListItemClick(user)} 
+              // disabled={user.isActive}
+              >
+                <ListItemText primary={user.name} />
               </ListItemButton>
             </ListItem>
           ))}

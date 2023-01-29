@@ -9,7 +9,7 @@ import { setActiveRoom } from '@/store/slices/session'
 import * as Automerge from '@automerge/automerge'
 import useEffectOnce from '@/utils/useEffectOnce'
 import { updateDoc } from '@/utils/automerge'
-import { ChatRoom, ChatsDoc, setChats } from '@/store/slices/chats';
+import { ChatRoom, ChatsDoc, setChats } from '@/store/slices/chats'
 
 type Props = {
   width: number
@@ -17,6 +17,7 @@ type Props = {
 
 const Sidebar: React.FC<Props> = ({ width }) => {
   const dispatch = useAppDispatch()
+  const user = useAppSelector((state) => state.sessionState.user)
   const activeRoom = useAppSelector((state) => state.sessionState.activeRoom)
   const chats = useAppSelector((state) => state.chatsState.chats)
   const [channel, setChannel] = useState<BroadcastChannel | null>(null)
@@ -40,7 +41,6 @@ const Sidebar: React.FC<Props> = ({ width }) => {
   }, [channel])
 
   const onMessageListener = (ev: MessageEvent) => {
-    
     const newChats = Automerge.merge<ChatsDoc>(Automerge.load(ev.data), chats)
     console.log('onmessage', newChats)
     dispatch(setChats(newChats))
@@ -55,7 +55,10 @@ const Sidebar: React.FC<Props> = ({ width }) => {
       (currChats) => {
         if (!currChats.chatRooms) currChats.chatRooms = []
 
-        currChats.chatRooms.push({ title: faker.company.bsNoun(), id: nanoid(6) })
+        currChats.chatRooms.push({
+          title: faker.company.bsNoun(),
+          id: nanoid(6)
+        })
       }
     )
 
@@ -75,7 +78,9 @@ const Sidebar: React.FC<Props> = ({ width }) => {
       chats,
       'Delete chat',
       (currChats) => {
-        const itemImdex = currChats.chatRooms.findIndex((chat) => chat.id === id)
+        const itemImdex = currChats.chatRooms.findIndex(
+          (chat) => chat.id === id
+        )
         if (itemImdex !== -1) {
           currChats.chatRooms.splice(itemImdex, 1)
         }
@@ -111,21 +116,23 @@ const Sidebar: React.FC<Props> = ({ width }) => {
         </Button>
       </Toolbar>
       <Divider />
-      <List component='nav'>
-        <React.Fragment>
-          {chats.chatRooms &&
-            chats.chatRooms.map((chats) => (
-              <Room
-                key={chats.id}
-                onEntry={() => handleEntryRoom(chats)}
-                onDelete={() => handleDeleteRoom(chats.id)}
-                isSelected={activeRoom?.id === chats.id}
-              >
-                {chats.title}
-              </Room>
-            ))}
-        </React.Fragment>
-      </List>
+      {user && (
+        <List component='nav'>
+          <React.Fragment>
+            {chats.chatRooms &&
+              chats.chatRooms.map((chats) => (
+                <Room
+                  key={chats.id}
+                  onEntry={() => handleEntryRoom(chats)}
+                  onDelete={() => handleDeleteRoom(chats.id)}
+                  isSelected={activeRoom?.id === chats.id}
+                >
+                  {chats.title}
+                </Room>
+              ))}
+          </React.Fragment>
+        </List>
+      )}
     </Drawer>
   )
 }

@@ -1,7 +1,5 @@
 import React from 'react'
 import './App.scss'
-import { nanoid } from 'nanoid'
-import { faker } from '@faker-js/faker'
 import CssBaseline from '@mui/material/CssBaseline'
 import Box from '@mui/material/Box'
 import Toolbar from '@mui/material/Toolbar'
@@ -16,7 +14,6 @@ import User from '@/model/user'
 import Sidebar from '@/components/sidebar'
 import Chat from '@/components/chat'
 import useEffectOnce from '@/utils/useEffectOnce'
-import * as Automerge from '@automerge/automerge'
 import { ChatsDoc, setChats } from '@/store/slices/chats'
 import { loadDoc } from '@/utils/automerge'
 import UsersDialog from '@/components/users-dialog';
@@ -38,13 +35,10 @@ const App: React.FC = () => {
       dispatch(setChats(doc))
     )
 
-    // let userData = sessionStorageJSON.getItem<User>(__USER_SS__)
-    // if (userData === null) {
-    //   userData = { name: faker.name.fullName(), id: nanoid(8) }
-    //   sessionStorageJSON.setItem<User>(__USER_SS__, userData)
-    // }
-
-    // dispatch(setUser(userData))
+    const userData = sessionStorageJSON.getItem<User>(__USER_SS__)
+    if (userData !== null) {
+      dispatch(setUser(userData))
+    }
   })
 
   return (
@@ -59,12 +53,12 @@ const App: React.FC = () => {
       >
         <Toolbar>
           <Typography variant='h6'>
-            React Chat User: {user?.name} {user?.id}
+            React Chat User: {user?.name}
           </Typography>
         </Toolbar>
       </AppBar>
-      {!user && <UsersDialog open={user === null} />}
-      {user && <Sidebar width={sidebarWidth} />}
+      <Sidebar width={sidebarWidth} />
+      <UsersDialog open={user === null}/>
       {user && activeRoom && (
         <div
           style={{

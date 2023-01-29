@@ -2,12 +2,8 @@ import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import * as Automerge from '@automerge/automerge';
 import User from '@/model/user';
 
-export interface SharedUser extends User {
-  isActive: boolean;
-}
-
 export interface UsersDoc {
-  users: SharedUser[];
+  users: User[];
 }
 
 export interface UsersState {
