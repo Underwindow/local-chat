@@ -2,15 +2,14 @@ import { faker } from '@faker-js/faker'
 import { Drawer, Toolbar, Button, Divider, List } from '@mui/material'
 import { nanoid } from 'nanoid'
 import React, { useEffect, useState } from 'react'
-import RoomDto from '@/model/room'
 import Room from '@/components/room'
 import AddIcon from '@mui/icons-material/Add'
 import { useAppDispatch, useAppSelector } from '@/utils/redux'
-import { setActiveRoom, setChats } from '@/store/slices/session'
+import { setActiveRoom } from '@/store/slices/session'
 import * as Automerge from '@automerge/automerge'
 import useEffectOnce from '@/utils/useEffectOnce'
-import { ChatsDoc } from '@/model/chats-doc'
 import { updateDoc } from '@/utils/automerge'
+import { ChatRoom, ChatsDoc, setChats } from '@/store/slices/chats';
 
 type Props = {
   width: number
@@ -18,12 +17,12 @@ type Props = {
 
 const Sidebar: React.FC<Props> = ({ width }) => {
   const dispatch = useAppDispatch()
-  const activeRoom = useAppSelector((state) => state.session.activeRoom)
-  const chats = useAppSelector((state) => state.session.chats)
+  const activeRoom = useAppSelector((state) => state.sessionState.activeRoom)
+  const chats = useAppSelector((state) => state.chatsState.chats)
   const [channel, setChannel] = useState<BroadcastChannel | null>(null)
 
   useEffectOnce(() => {
-    setChannel(new BroadcastChannel('chats'))
+    setChannel(new BroadcastChannel(__CHATS_LS__))
 
     return () => {
       console.log('channel close')
@@ -55,9 +54,9 @@ const Sidebar: React.FC<Props> = ({ width }) => {
       chats,
       'Add chat',
       (currChats) => {
-        if (!currChats.chats) currChats.chats = []
+        if (!currChats.chatRooms) currChats.chatRooms = []
 
-        currChats.chats.push({ title: faker.company.bsNoun(), id: nanoid(6) })
+        currChats.chatRooms.push({ title: faker.company.bsNoun(), id: nanoid(6) })
       }
     )
 
@@ -65,7 +64,7 @@ const Sidebar: React.FC<Props> = ({ width }) => {
     dispatch(setChats(newChats))
   }
 
-  function handleEntryRoom(room: RoomDto) {
+  function handleEntryRoom(room: ChatRoom) {
     console.log('EntryRoomClicked', room.id)
     dispatch(setActiveRoom(room))
   }
@@ -77,9 +76,9 @@ const Sidebar: React.FC<Props> = ({ width }) => {
       chats,
       'Delete chat',
       (currChats) => {
-        const itemImdex = currChats.chats.findIndex((chat) => chat.id === id)
+        const itemImdex = currChats.chatRooms.findIndex((chat) => chat.id === id)
         if (itemImdex !== -1) {
-          currChats.chats.splice(itemImdex, 1)
+          currChats.chatRooms.splice(itemImdex, 1)
         }
       }
     )
@@ -115,8 +114,8 @@ const Sidebar: React.FC<Props> = ({ width }) => {
       <Divider />
       <List component='nav'>
         <React.Fragment>
-          {chats?.chats &&
-            chats.chats.map((chats) => (
+          {chats?.chatRooms &&
+            chats.chatRooms.map((chats) => (
               <Room
                 key={chats.id}
                 onEntry={() => handleEntryRoom(chats)}

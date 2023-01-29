@@ -12,5 +12,5 @@ const storage = (storage: Storage) => ({
   removeItem: (keyName: string) => storage.removeItem(keyName),
 });
 
-export const localStorage = storage(window.localStorage);
-export const sessionStorage = storage(window.sessionStorage);
+export const localStorageJSON = storage(window.localStorage);
+export const sessionStorageJSON = storage(window.sessionStorage);

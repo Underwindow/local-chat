@@ -1,8 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import wasm from 'vite-plugin-wasm';
+import dotenv from 'dotenv'
 import topLevelAwait from 'vite-plugin-top-level-await';
 import * as path from 'path';
+
+dotenv.config()
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -10,6 +13,10 @@ export default defineConfig(({ command, mode }) => {
     assetsInclude: ['**/*.png'],
     server: {
       port: 3000,
+    },
+    define: {
+      __CHATS_LS__: JSON.stringify(process.env.VITE_CHATS_LS.trim()),
+      __USER_SS__: JSON.stringify(process.env.VITE_USER_SS.trim()),
     },
     resolve: {
       alias: {

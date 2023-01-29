@@ -14,16 +14,16 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import './chat.scss'
 import SendIcon from '@mui/icons-material/Send'
 import useEffectOnce from '@/utils/useEffectOnce'
-import RoomDto from '@/model/room'
 import AttachFileIcon from '@mui/icons-material/AttachFile'
-import ChatMessage from '@/model/chat-message'
 import Bubble from '@/components/bubble'
 import * as Automerge from '@automerge/automerge'
-import { ChatsDoc } from '@/model/chats-doc';
+// import { ChatsDoc } from '@/store/slices/chats/chats-doc.model';
+import { ChatRoom } from '@/store/slices/chats';
+import { ChatMessage } from '@/store/slices/chat-room';
 
 type Props = {
   username: string
-  roomData: RoomDto
+  roomData: ChatRoom
 }
 
 const Chat: React.FC<Props> = ({ ...props }) => {
@@ -59,7 +59,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
         {
           id: chatMessageDto.id,
           user: chatMessageDto.user,
-          message: chatMessageDto.message
+          contents: chatMessageDto.contents
         }
       ])
     }
@@ -103,7 +103,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
 
   const listChatMessages = chatMessages.map((chatMessageDto) => (
     <Bubble key={chatMessageDto.id}>
-      {`${chatMessageDto.user}: ${chatMessageDto.message}`}
+      {`${chatMessageDto.user}: ${chatMessageDto.contents.text}`}
     </Bubble>
   ))
 
