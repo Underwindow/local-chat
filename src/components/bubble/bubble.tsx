@@ -1,10 +1,14 @@
 import React, { HTMLAttributes } from 'react'
 import styles from './bubble.module.scss'
-import { Box, IconButton, List, ListItem, ListItemText } from '@mui/material'
 import ReplyIcon from '@mui/icons-material/Reply'
 import { ChatMessage, Reply } from '@/store/slices/chat-room'
 import { useAppSelector } from '@/utils/redux'
 import { localStorageJSON } from '@/utils/storage';
+import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import List from '@mui/material/List';
+import ListItem from '@mui/material/ListItem';
+import ListItemText from '@mui/material/ListItemText';
 
 interface Props extends HTMLAttributes<HTMLUListElement> {
   message: ChatMessage

@@ -1,7 +1,11 @@
-import { Box, AppBar, Toolbar, Typography, IconButton } from '@mui/material'
-import CloseIcon from '@mui/icons-material/Close'
 import React from 'react'
 import styles from './reply.module.scss'
+import Box from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
+import IconButton from '@mui/material/IconButton'
+import CloseIcon from '@mui/icons-material/Close'
+import AppBar from '@mui/material/AppBar'
+import Toolbar from '@mui/material/Toolbar'
 
 interface Props extends React.PropsWithChildren {
   onClose: () => void

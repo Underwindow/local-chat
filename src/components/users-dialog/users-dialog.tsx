@@ -1,16 +1,13 @@
-import {
-  Dialog,
-  DialogTitle,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemAvatar,
-  Avatar,
-  ListItemText
-} from '@mui/material'
 import React, { useEffect, useState } from 'react'
+import Dialog from '@mui/material/Dialog'
+import DialogTitle from '@mui/material/DialogTitle'
+import List from '@mui/material/List'
+import ListItem from '@mui/material/ListItem'
+import ListItemButton from '@mui/material/ListItemButton'
+import ListItemText from '@mui/material/ListItemText'
+import ListItemAvatar from '@mui/material/ListItemAvatar'
+import Avatar from '@mui/material/Avatar'
 import AddIcon from '@mui/icons-material/Add'
-import useEffectOnce from '@/utils/useEffectOnce'
 import * as Automerge from '@automerge/automerge'
 import { UsersDoc, setSharedUsers } from '@/store/slices/users'
 import { useAppDispatch, useAppSelector } from '@/utils/redux'
@@ -33,14 +30,11 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
   const sharedUsers = useAppSelector((state) => state.usersState.sharedUsers)
   const [channel, setChannel] = useState<BroadcastChannel | null>(null)
 
-  useEffectOnce(() => {
+  useEffect(() => {
     setChannel(new BroadcastChannel(__USERS_LS__))
-    
-    return () => {
-      console.log(`${__USERS_LS__} channel close`)
-      channel?.close()
-    }
-  })
+
+    return () => channel?.close()
+  }, [])
 
   useEffect(() => {
     if (channel) {
@@ -60,12 +54,16 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
     dispatch(setSharedUsers(newSharedUsers))
   }
 
-  function setSharedUserActive(sharedUser: User, value: boolean, onSuccess?: (user: User) => void): void {
+  function setSharedUserActive(
+    sharedUser: User,
+    value: boolean,
+    onSuccess?: (user: User) => void
+  ): void {
     if (!channel) return
 
     const newUserState: User = {
       id: sharedUser.id,
-      name: sharedUser.name,
+      name: sharedUser.name
       // isActive: value,
     }
 
@@ -80,7 +78,7 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
 
     // updateDoc(newSharedUsers, channel)
     // dispatch(setSharedUsers(newSharedUsers))
-    
+
     if (onSuccess) onSuccess(newUserState)
   }
 
@@ -101,8 +99,8 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
         if (!currUsers.users) currUsers.users = []
 
         currUsers.users.push({
-          name: faker.name.fullName(), 
-          id: nanoid(8),
+          name: faker.name.fullName(),
+          id: nanoid(8)
           // isActive: false
         })
       }
@@ -113,14 +111,15 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
   }
 
   return (
-    <Dialog open={open} sx={{visibility: !!user ? 'hidden' : 'visible' }}>
+    <Dialog open={open} sx={{ visibility: !!user ? 'hidden' : 'visible' }}>
       <DialogTitle>Choose your account</DialogTitle>
       <List sx={{ pt: 0 }}>
         {sharedUsers.users &&
           sharedUsers.users.map((user) => (
             <ListItem key={user.id} disableGutters>
-              <ListItemButton onClick={() => handleListItemClick(user)} 
-              // disabled={user.isActive}
+              <ListItemButton
+                onClick={() => handleListItemClick(user)}
+                // disabled={user.isActive}
               >
                 <ListItemText primary={user.name} />
               </ListItemButton>

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import './App.scss'
 import CssBaseline from '@mui/material/CssBaseline'
 import Box from '@mui/material/Box'
@@ -10,7 +10,6 @@ import User from '@/model/user'
 import { setUser } from '@/store/slices/session'
 import { useAppDispatch, useAppSelector } from '@/utils/redux'
 import { sessionStorageJSON } from '@/utils/storage'
-import useEffectOnce from '@/utils/useEffectOnce'
 import Sidebar from '@/components/sidebar'
 import Chat from '@/components/chat'
 import UsersDialog from '@/components/users-dialog'
@@ -22,12 +21,12 @@ const App: React.FC = () => {
   const user = useAppSelector((state) => state.sessionState.user)
   const activeRoom = useAppSelector((state) => state.sessionState.activeRoom)
 
-  useEffectOnce(() => {
+  useEffect(() => {
     const userData = sessionStorageJSON.getItem<User>(__USER_SS__)
     if (userData !== null) {
       dispatch(setUser(userData))
     }
-  })
+  }, [])
 
   return (
     <Box sx={{ display: 'flex' }}>

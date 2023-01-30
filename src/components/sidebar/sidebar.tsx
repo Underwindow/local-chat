@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react'
+import Drawer from '@mui/material/Drawer'
+import Toolbar from '@mui/material/Toolbar'
+import Button from '@mui/material/Button'
+import Divider from '@mui/material/Divider'
+import List from '@mui/material/List'
 import AddIcon from '@mui/icons-material/Add'
-import { Drawer, Toolbar, Button, Divider, List } from '@mui/material'
 import * as Automerge from '@automerge/automerge'
 import { faker } from '@faker-js/faker'
 import { nanoid } from 'nanoid'
 import { setActiveRoom } from '@/store/slices/session'
 import { ChatRoom, ChatsDoc, setChats } from '@/store/slices/chats'
 import { useAppDispatch, useAppSelector } from '@/utils/redux'
-import useEffectOnce from '@/utils/useEffectOnce'
 import { updateDoc } from '@/utils/automerge'
 import Room from '@/components/room'
 
@@ -22,11 +25,11 @@ const Sidebar: React.FC<Props> = ({ width }) => {
   const chatRooms = useAppSelector((state) => state.chatsState.chats)
   const [channel, setChannel] = useState<BroadcastChannel | null>(null)
 
-  useEffectOnce(() => {
+  useEffect(() => {
     setChannel(new BroadcastChannel(__CHATS_LS__))
 
     return () => channel?.close()
-  })
+  }, [])
 
   useEffect(() => {
     if (channel) {

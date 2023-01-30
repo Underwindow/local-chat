@@ -1,17 +1,5 @@
 import { Fragment, useEffect, useState } from 'react'
 import './chat.scss'
-import {
-  Container,
-  Divider,
-  Grid,
-  IconButton,
-  List,
-  Paper,
-  TextField,
-  Typography
-} from '@mui/material'
-import { Box } from '@mui/system'
-import SendIcon from '@mui/icons-material/Send'
 import * as Automerge from '@automerge/automerge'
 import { nanoid } from 'nanoid'
 import { ChatRoom } from '@/store/slices/chats'
@@ -24,6 +12,16 @@ import { localStorageJSON } from '@/utils/storage'
 import Bubble from '@/components/bubble'
 import IconFileUpload from '@/components/icon-file-upload'
 import ReplyBox from '@/components/reply-box'
+import List from '@mui/material/List';
+import Container from '@mui/material/Container';
+import Paper from '@mui/material/Paper';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
+import Grid from '@mui/material/Grid';
+import TextField from '@mui/material/TextField';
+import IconButton from '@mui/material/IconButton';
+import SendIcon from '@mui/icons-material/Send'
 
 interface Props {
   username: string
