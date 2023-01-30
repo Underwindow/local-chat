@@ -8,17 +8,17 @@ import {
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 
-type Props = {
+interface Props extends React.PropsWithChildren {
   onEntry: () => void
   onDelete: () => void
   isSelected: boolean
-} & React.PropsWithChildren
+}
 
 const Room: React.FC<Props> = ({ onEntry, onDelete, children, isSelected }) => {
   return (
     <ListItem>
       <ListItemButton onClick={() => onEntry()} selected={isSelected}>
-        <ListItemText primary={children}/>
+        <ListItemText primary={children} />
       </ListItemButton>
       <ListItemIcon>
         <IconButton onClick={() => onDelete()} color='error'>

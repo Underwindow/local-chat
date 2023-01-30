@@ -34,5 +34,13 @@ export default defineConfig(({ command, mode }) => {
     optimizeDeps: {
       exclude: ['@automerge/automerge-wasm'],
     },
+
+    rollupOptions: {
+      output: {
+        assetFileNames: 'assets/[name][hash][extname]',
+        chunkFileNames: '[name][hash].js',
+        entryFileNames: '[name][hash].js'
+      }
+    }
   };
 });

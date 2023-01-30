@@ -1,34 +1,31 @@
+import { Fragment, useEffect, useState } from 'react'
+import './chat.scss'
 import {
-  AppBar,
   Container,
   Divider,
-  FormControl,
   Grid,
   IconButton,
   List,
   Paper,
   TextField,
-  Toolbar,
   Typography
 } from '@mui/material'
 import { Box } from '@mui/system'
-import { FormEvent, Fragment, useEffect, useState } from 'react'
-import './chat.scss'
 import SendIcon from '@mui/icons-material/Send'
-import CloseIcon from '@mui/icons-material/Close'
-import Bubble from '@/components/bubble'
 import * as Automerge from '@automerge/automerge'
+import { nanoid } from 'nanoid'
 import { ChatRoom } from '@/store/slices/chats'
 import { ChatRoomDoc, Reply, setChatRoom } from '@/store/slices/chat-room'
 import { useAppDispatch, useAppSelector } from '@/utils/redux'
-import { nanoid } from 'nanoid'
-import { loadDoc, updateDoc } from '@/utils/automerge'
 import dateFormat from '@/utils/dateFormat'
-import { localStorageJSON } from '@/utils/storage'
-import IconFileUpload from '@/components/icon-file-upload'
+import { loadDoc, updateDoc } from '@/utils/automerge'
 import uploadImage, { ResolvedImage } from '@/utils/uploadImage'
+import { localStorageJSON } from '@/utils/storage'
+import Bubble from '@/components/bubble'
+import IconFileUpload from '@/components/icon-file-upload'
+import ReplyBox from '@/components/reply-box'
 
-type Props = {
+interface Props {
   username: string
   roomData: ChatRoom
 }
@@ -47,7 +44,6 @@ const Chat: React.FC<Props> = ({ ...props }) => {
   const [reply, setReply] = useState<Reply | null>(null)
 
   useEffect(() => {
-    console.log('activeRoom useEffect', props.roomData.id)
     setChannel(new BroadcastChannel(props.roomData.id))
 
     loadDoc<ChatRoomDoc>(localStorageJSON, activeRoom!.id, (doc) =>
@@ -57,12 +53,10 @@ const Chat: React.FC<Props> = ({ ...props }) => {
 
   useEffect(() => {
     if (channel) {
-      console.log('channel onmessage sub', props.roomData.id)
       channel.onmessage = onMessageListener
     }
 
     return () => {
-      console.log('channel close', props.roomData.id)
       channel?.removeEventListener('message', onMessageListener)
       channel?.close()
     }
@@ -74,14 +68,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
       chatRoom
     )
 
-    console.log('onmessage', newChatRoom)
     dispatch(setChatRoom(newChatRoom))
-  }
-
-  const handleMessageChange = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setMessage(event.target.value)
   }
 
   const handleMsgImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,14 +84,11 @@ const Chat: React.FC<Props> = ({ ...props }) => {
   const sendMessage = () => {
     if (!channel) return
     if (message !== '' || msgImage !== null) {
-      console.log('here')
-
       const newChatRoom = Automerge.change<ChatRoomDoc>(
         chatRoom,
         'Send Message',
         (currChatRoom) => {
           if (!currChatRoom.messages) currChatRoom.messages = []
-          console.log('reply message', reply, message)
 
           currChatRoom.messages.unshift({
             id: nanoid(6),
@@ -124,30 +108,30 @@ const Chat: React.FC<Props> = ({ ...props }) => {
       setMessage('')
       setReply(null)
       setMsgImage(null)
-      console.log('Sent!')
     }
   }
 
-  const listChatMessages = chatRoom.messages?.map((message) => (
-    <Bubble
-      id={message.id}
-      key={message.id}
-      message={message}
-      onReply={(reply) => setReply(reply)}
-      onMoveToReply={(reply) => {
-        const replyEl = document.getElementById(reply.messageId)
-        replyEl?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
-        })
-      }}
-    />
-  ))
+  const roomTitle = `Room: ${props.roomData.title}`
 
-  function handleFormSubmit(event: FormEvent<HTMLDivElement>): void {
-    event.preventDefault()
-    console.log('handleFormSubmit', event.currentTarget.nodeValue)
-  }
+  const listChatMessages = (
+    <List id='chat-window-messages'>
+      {chatRoom.messages?.map((message) => (
+        <Bubble
+          key={message.id}
+          id={message.id}
+          message={message}
+          onReply={(reply) => setReply(reply)}
+          onMoveToReply={(reply) => {
+            const replyEl = document.getElementById(reply.messageId)
+            replyEl?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center'
+            })
+          }}
+        />
+      ))}
+    </List>
+  )
 
   return (
     <Fragment>
@@ -155,74 +139,61 @@ const Chat: React.FC<Props> = ({ ...props }) => {
         <Paper elevation={2}>
           <Box p={3}>
             <Typography variant='h4' gutterBottom>
-              Room: {props.roomData.title}
+              {roomTitle}
             </Typography>
             <Divider />
-            <FormControl fullWidth onSubmit={handleFormSubmit}>
-              <Grid container spacing={4} alignItems='center'>
-                <Grid id='chat-window' xs={12} item>
-                  <List id='chat-window-messages'>{listChatMessages}</List>
-                </Grid>
-                <Grid xs={1} item>
-                  <IconFileUpload
-                    accept='image/png, image/jpeg'
-                    onChange={handleMsgImageChange}
-                  />
-                </Grid>
-                <Grid
-                  sx={{ position: 'relative' }}
-                  style={{ paddingLeft: 0 }}
-                  xs={10}
-                  item
-                >
-                  {reply && (
+            <Grid container spacing={4} alignItems='center'>
+              <Grid id='chat-window' xs={12} item>
+                {listChatMessages}
+              </Grid>
+              <Grid xs={12} item>
+                <Grid container>
+                  <Grid xs={12} item>
                     <Box
-                      id='reply-window'
                       sx={{
-                        backgroundColor: 'white'
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '1rem'
                       }}
                     >
-                      <AppBar position='relative' color='transparent'>
-                        <Toolbar>
-                          <Typography
-                            variant='h6'
-                            component='div'
-                            overflow='hidden'
-                            noWrap
-                          >
-                            Replay to: {reply?.username}
-                          </Typography>
-                          <Box sx={{ flexGrow: 1 }} />
-                          <IconButton onClick={() => setReply(null)}>
-                            <CloseIcon />
-                          </IconButton>
-                        </Toolbar>
-                      </AppBar>
+                      <IconFileUpload
+                        accept='image/png, image/jpeg'
+                        onChange={handleMsgImageChange}
+                      />
+                      <Box
+                        sx={{ position: 'relative', flexGrow: '1' }}
+                        style={{ paddingLeft: 0 }}
+                      >
+                        {reply && (
+                          <ReplyBox onClose={() => setReply(null)}>
+                            {reply.username}
+                          </ReplyBox>
+                        )}
+                        <TextField
+                          inputRef={(input) => input && reply && input.focus()}
+                          fullWidth
+                          onChange={(e) => setMessage(e.target.value)}
+                          onKeyDown={(e) => handleEnterKey(e)}
+                          value={message}
+                          label='Type your message...'
+                          helperText={msgImage?.fileName}
+                          variant='outlined'
+                        />
+                      </Box>
+                      <IconButton
+                        onClick={sendMessage}
+                        aria-label='send'
+                        color='primary'
+                        disabled={message === '' && msgImage === null}
+                      >
+                        <SendIcon />
+                      </IconButton>
                     </Box>
-                  )}
-
-                  <TextField
-                    fullWidth
-                    onChange={handleMessageChange}
-                    onKeyDown={(e) => handleEnterKey(e)}
-                    value={message}
-                    label='Type your message...'
-                    helperText={msgImage?.fileName}
-                    variant='outlined'
-                  />
-                </Grid>
-                <Grid xs={1} item>
-                  <IconButton
-                    onClick={sendMessage}
-                    aria-label='send'
-                    color='primary'
-                    disabled={message === '' && msgImage === null}
-                  >
-                    <SendIcon />
-                  </IconButton>
+                  </Grid>
                 </Grid>
               </Grid>
-            </FormControl>
+            </Grid>
           </Box>
         </Paper>
       </Container>

@@ -5,7 +5,7 @@ export function updateDoc<T>(
   newDoc: Automerge.Doc<T>,
   channel: BroadcastChannel
 ) {
-  let binary = Automerge.save(newDoc);
+  const binary = Automerge.save(newDoc);
   localStorageJSON.setItem(channel.name, Array.from(binary));
   channel.postMessage(binary);
 }

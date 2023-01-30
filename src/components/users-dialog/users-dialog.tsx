@@ -34,10 +34,6 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
   const [channel, setChannel] = useState<BroadcastChannel | null>(null)
 
   useEffectOnce(() => {
-    loadDoc<UsersDoc>(localStorageJSON, __USERS_LS__, (doc) =>
-      dispatch(setSharedUsers(doc))
-    )
-
     setChannel(new BroadcastChannel(__USERS_LS__))
     
     return () => {
@@ -82,10 +78,10 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
     //   }
     // )
 
-    if (onSuccess) onSuccess(newUserState)
-
     // updateDoc(newSharedUsers, channel)
     // dispatch(setSharedUsers(newSharedUsers))
+    
+    if (onSuccess) onSuccess(newUserState)
   }
 
   function handleListItemClick(sharedUser: User): void {
