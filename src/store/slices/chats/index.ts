@@ -28,5 +28,4 @@ export const chatsSlice = createSlice({
   },
 })
 
-// Action creators are generated for each case reducer function
 export const { setChats } = chatsSlice.actions

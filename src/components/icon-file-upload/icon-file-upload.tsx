@@ -1,6 +1,6 @@
 import React from 'react'
-import IconButton from '@mui/material/IconButton';
-import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import IconButton from '@mui/material/IconButton'
+import PhotoCamera from '@mui/icons-material/PhotoCamera'
 
 type Props = Omit<
   React.InputHTMLAttributes<HTMLInputElement>,

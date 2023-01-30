@@ -64,20 +64,7 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
     const newUserState: User = {
       id: sharedUser.id,
       name: sharedUser.name
-      // isActive: value,
     }
-
-    // const newSharedUsers = Automerge.change<UsersDoc>(
-    //   sharedUsers,
-    //   'Add user',
-    //   (currUsers) => {
-    //     const id = currUsers.users.findIndex((user) => user.id === sharedUser.id)
-    //     currUsers.users[id] = newUserState
-    //   }
-    // )
-
-    // updateDoc(newSharedUsers, channel)
-    // dispatch(setSharedUsers(newSharedUsers))
 
     if (onSuccess) onSuccess(newUserState)
   }
@@ -101,7 +88,6 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
         currUsers.users.push({
           name: faker.name.fullName(),
           id: nanoid(8)
-          // isActive: false
         })
       }
     )
@@ -119,7 +105,6 @@ const UsersDialog: React.FC<Props> = ({ ...props }) => {
             <ListItem key={user.id} disableGutters>
               <ListItemButton
                 onClick={() => handleListItemClick(user)}
-                // disabled={user.isActive}
               >
                 <ListItemText primary={user.name} />
               </ListItemButton>

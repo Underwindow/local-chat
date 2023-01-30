@@ -6,7 +6,6 @@ export interface Reply {
   messageId: string;
   username: string;
   text: string;
-  // anchorEl: HTMLElement
 }
 
 export interface MessageContent {
@@ -44,5 +43,4 @@ export const chatRoomSlice = createSlice({
   },
 });
 
-// Action creators are generated for each case reducer function
 export const { setChatRoom } = chatRoomSlice.actions;
