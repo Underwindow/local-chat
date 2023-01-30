@@ -29,6 +29,7 @@ interface Props {
 }
 
 const ENTER_KEY_CODE = 'Enter'
+const MAX_IMG_SIZE_MB = 2
 
 const Chat: React.FC<Props> = ({ ...props }) => {
   const dispatch = useAppDispatch()
@@ -39,6 +40,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
   const [channel, setChannel] = useState<BroadcastChannel | null>(null)
   const [msgText, setMsgText] = useState('')
   const [msgImage, setMsgImage] = useState<ResolvedImage | null>(null)
+  const [msgError, setMsgError] = useState<string | null>(null)
   const [reply, setReply] = useState<Reply | null>(null)
 
   useEffect(() => {
@@ -70,7 +72,16 @@ const Chat: React.FC<Props> = ({ ...props }) => {
   }
 
   const handleMsgImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    uploadImage(event).then((image) => setMsgImage(image))
+    const files = event.target.files
+    if (files !== null) {
+      uploadImage(files[0], MAX_IMG_SIZE_MB)
+        .then((image) => {
+          event.target.value = ''
+          setMsgImage(image)
+          setMsgError(null)
+        })
+        .catch(setMsgError)
+    }
   }
 
   const handleEnterKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -112,6 +123,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
       setMsgText('')
       setReply(null)
       setMsgImage(null)
+      setMsgError(null)
     }
   }
 
@@ -163,7 +175,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
                     >
                       <IconFileUpload
                         accept='image/png, image/jpeg'
-                        onChange={handleMsgImageChange}
+                        onChange={(e) => handleMsgImageChange(e)}
                       />
                       <Box
                         sx={{ position: 'relative', flexGrow: '1' }}
@@ -181,7 +193,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
                           onKeyDown={(e) => handleEnterKey(e)}
                           value={msgText}
                           label='Type your message...'
-                          helperText={msgImage?.fileName}
+                          helperText={msgImage?.fileName || msgError || ''}
                           variant='outlined'
                         />
                       </Box>

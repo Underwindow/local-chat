@@ -18,21 +18,20 @@ export type ResolvedImage = {
   base64: ArrayBuffer | string | null;
 };
 
-const uploadImage = (event: React.ChangeEvent<HTMLInputElement>) => {
+const uploadImage = (image: File, limitSizeMB: number) => {
   return new Promise<ResolvedImage>((resolve, reject) => {
-    const files = event.target.files;
-    if (files !== null) {
-      const file = files[0];
+    const maxAllowedSize = limitSizeMB * 1024 * 1024;
+    if (image.size > maxAllowedSize)
+      reject(`Maximum allowed size is: ${limitSizeMB}MB`);
 
-      convertBase64(file)
-        .then((base64) =>
-          resolve({
-            fileName: file.name,
-            base64,
-          })
-        )
-        .catch((error) => reject(error));
-    } else reject('No files attached');
+    convertBase64(image)
+      .then((base64) =>
+        resolve({
+          fileName: image.name,
+          base64,
+        })
+      )
+      .catch((error) => reject(error));
   });
 };
 
