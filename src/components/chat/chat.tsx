@@ -39,7 +39,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
   const chatRoom = useAppSelector((state) => state.chatRoomState.chatRoom)
 
   const [channel, setChannel] = useState<BroadcastChannel | null>(null)
-  const [message, setMessage] = useState('')
+  const [msgText, setMsgText] = useState('')
   const [msgImage, setMsgImage] = useState<ResolvedImage | null>(null)
   const [reply, setReply] = useState<Reply | null>(null)
 
@@ -81,9 +81,15 @@ const Chat: React.FC<Props> = ({ ...props }) => {
     }
   }
 
+  const storeImage = (base64: string): string => {
+    const imageId = nanoid(8)
+    localStorageJSON.setItem<string>(imageId, base64)
+    return imageId
+  }
+
   const sendMessage = () => {
     if (!channel) return
-    if (message !== '' || msgImage !== null) {
+    if (msgText !== '' || msgImage !== null) {
       const newChatRoom = Automerge.change<ChatRoomDoc>(
         chatRoom,
         'Send Message',
@@ -91,11 +97,11 @@ const Chat: React.FC<Props> = ({ ...props }) => {
           if (!currChatRoom.messages) currChatRoom.messages = []
 
           currChatRoom.messages.unshift({
-            id: nanoid(6),
+            id: nanoid(8),
             user: user!,
             contents: {
-              text: message,
-              image: (msgImage?.base64 as string) ?? null,
+              text: msgText,
+              imageId: msgImage ? storeImage(msgImage.base64 as string) : null,
               reply: reply
             },
             date: dateFormat(new Date())
@@ -105,7 +111,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
 
       updateDoc(newChatRoom, channel)
       dispatch(setChatRoom(newChatRoom))
-      setMessage('')
+      setMsgText('')
       setReply(null)
       setMsgImage(null)
     }
@@ -173,9 +179,9 @@ const Chat: React.FC<Props> = ({ ...props }) => {
                         <TextField
                           inputRef={(input) => input && reply && input.focus()}
                           fullWidth
-                          onChange={(e) => setMessage(e.target.value)}
+                          onChange={(e) => setMsgText(e.target.value)}
                           onKeyDown={(e) => handleEnterKey(e)}
-                          value={message}
+                          value={msgText}
                           label='Type your message...'
                           helperText={msgImage?.fileName}
                           variant='outlined'
@@ -185,7 +191,7 @@ const Chat: React.FC<Props> = ({ ...props }) => {
                         onClick={sendMessage}
                         aria-label='send'
                         color='primary'
-                        disabled={message === '' && msgImage === null}
+                        disabled={msgText === '' && msgImage === null}
                       >
                         <SendIcon />
                       </IconButton>

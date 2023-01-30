@@ -4,6 +4,7 @@ import { Box, IconButton, List, ListItem, ListItemText } from '@mui/material'
 import ReplyIcon from '@mui/icons-material/Reply'
 import { ChatMessage, Reply } from '@/store/slices/chat-room'
 import { useAppSelector } from '@/utils/redux'
+import { localStorageJSON } from '@/utils/storage';
 
 interface Props extends HTMLAttributes<HTMLUListElement> {
   message: ChatMessage
@@ -28,7 +29,8 @@ const Bubble: React.FC<Props> = ({
   }
 
   const reply = message.contents.reply
-  const image = message.contents.image
+  const imageId = message.contents.imageId
+  const image = imageId ? localStorageJSON.getItem<string>(imageId) : null
 
   const replyButton = (
     <Box sx={{ display: 'flex' }}>
@@ -54,7 +56,7 @@ const Bubble: React.FC<Props> = ({
   const messageContent = (
     <>
       {messageText}
-      {(image || reply) && (
+      {(imageId || reply) && (
         <List sx={{ padding: 0 }}>
           <ListItem sx={{ padding: 0 }}>
             <ListItemText

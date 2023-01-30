@@ -11,7 +11,7 @@ export interface Reply {
 
 export interface MessageContent {
   text: string;
-  image: string | null;
+  imageId: string | null;
   reply: Reply | null;
 }
 

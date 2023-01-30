@@ -7,16 +7,13 @@ import Typography from '@mui/material/Typography'
 import Container from '@mui/material/Container'
 import AppBar from '@mui/material/AppBar'
 import User from '@/model/user'
-import { ChatsDoc, setChats } from '@/store/slices/chats'
 import { setUser } from '@/store/slices/session'
 import { useAppDispatch, useAppSelector } from '@/utils/redux'
-import { localStorageJSON, sessionStorageJSON } from '@/utils/storage'
-import { loadDoc } from '@/utils/automerge'
+import { sessionStorageJSON } from '@/utils/storage'
 import useEffectOnce from '@/utils/useEffectOnce'
 import Sidebar from '@/components/sidebar'
 import Chat from '@/components/chat'
 import UsersDialog from '@/components/users-dialog'
-import { UsersDoc, setSharedUsers } from './store/slices/users'
 
 const sidebarWidth: number = 320
 
