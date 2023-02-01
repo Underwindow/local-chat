@@ -1,60 +1,48 @@
 import { Fragment, useEffect, useState } from 'react'
-import './chat.scss'
 import * as Automerge from '@automerge/automerge'
 import { nanoid } from 'nanoid'
-import { ChatRoom } from '@/store/slices/chats'
-import { ChatRoomDoc, Reply, setChatRoom } from '@/store/slices/chat-room'
+import { ChatMessage, ChatDoc, setChatRoom } from '@/store/slices/chat-room'
 import { useAppDispatch, useAppSelector } from '@/utils/redux'
 import dateFormat from '@/utils/dateFormat'
 import { loadDoc, updateDoc } from '@/utils/automerge'
-import uploadImage, { ResolvedImage } from '@/utils/uploadImage'
+import { ResolvedImage } from '@/utils/uploadImage'
 import { localStorageJSON } from '@/utils/storage'
-import Bubble from '@/components/bubble'
-import IconFileUpload from '@/components/icon-file-upload'
-import ReplyBox from '@/components/reply-box'
-import List from '@mui/material/List'
 import Container from '@mui/material/Container'
 import Paper from '@mui/material/Paper'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Divider from '@mui/material/Divider'
 import Grid from '@mui/material/Grid'
-import TextField from '@mui/material/TextField'
-import IconButton from '@mui/material/IconButton'
-import SendIcon from '@mui/icons-material/Send'
+import User from '@/model/user'
+import ChatInput from '@/components/chat-input'
+import { MessageData } from '@/components/chat-input/chat-input'
+import ChatScroll from '@/components/chat-scroll'
 
 interface Props {
-  username: string
-  roomData: ChatRoom
+  user: User
 }
 
-const ENTER_KEY_CODE = 'Enter'
-const MAX_IMG_SIZE_MB = 2
-
 const Chat: React.FC<Props> = ({ ...props }) => {
+  const { user } = props
+
   const dispatch = useAppDispatch()
-  const user = useAppSelector((state) => state.sessionState.user)
+  const chatDoc = useAppSelector((state) => state.chatRoomState.chatDoc)
   const activeRoom = useAppSelector((state) => state.sessionState.activeRoom)
-  const chatRoom = useAppSelector((state) => state.chatRoomState.chatRoom)
 
   const [channel, setChannel] = useState<BroadcastChannel | null>(null)
-  const [msgText, setMsgText] = useState('')
-  const [msgImage, setMsgImage] = useState<ResolvedImage | null>(null)
-  const [msgError, setMsgError] = useState<string | null>(null)
-  const [reply, setReply] = useState<Reply | null>(null)
 
   useEffect(() => {
-    setChannel(new BroadcastChannel(props.roomData.id))
+    if (!activeRoom) return
 
-    loadDoc<ChatRoomDoc>(localStorageJSON, activeRoom!.id, (doc) =>
+    setChannel(new BroadcastChannel(activeRoom.id))
+
+    loadDoc<ChatDoc>(localStorageJSON, activeRoom.id, (doc) =>
       dispatch(setChatRoom(doc))
     )
   }, [activeRoom])
 
   useEffect(() => {
-    if (channel) {
-      channel.onmessage = onMessageListener
-    }
+    if (channel) channel.onmessage = onMessageListener
 
     return () => {
       channel?.removeEventListener('message', onMessageListener)
@@ -63,91 +51,51 @@ const Chat: React.FC<Props> = ({ ...props }) => {
   }, [channel])
 
   const onMessageListener = (ev: MessageEvent) => {
-    const newChatRoom = Automerge.merge<ChatRoomDoc>(
+    const newChatRoom = Automerge.merge<ChatDoc>(
       Automerge.load(ev.data),
-      chatRoom
+      chatDoc
     )
 
     dispatch(setChatRoom(newChatRoom))
   }
 
-  const handleMsgImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files
-    if (files !== null) {
-      uploadImage(files[0], MAX_IMG_SIZE_MB)
-        .then((image) => {
-          event.target.value = ''
-          setMsgImage(image)
-          setMsgError(null)
-        })
-        .catch(setMsgError)
-    }
-  }
-
-  const handleEnterKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === ENTER_KEY_CODE) {
-      sendMessage()
-    }
-  }
-
-  const storeImage = (base64: string): string => {
+  const storeImage = (image: ResolvedImage) => {
     const imageId = nanoid(8)
-    localStorageJSON.setItem<string>(imageId, base64)
-    return imageId
+    localStorageJSON.setItem<string>(imageId, image.base64 as string)
+    return { imageId }
   }
 
-  const sendMessage = () => {
+  const sendMessage = (msgData: MessageData) => {
+    console.log('channel.current?.name', channel?.name)
+
     if (!channel) return
-    if (msgText !== '' || msgImage !== null) {
-      const newChatRoom = Automerge.change<ChatRoomDoc>(
-        chatRoom,
-        'Send Message',
-        (currChatRoom) => {
-          if (!currChatRoom.messages) currChatRoom.messages = []
 
-          currChatRoom.messages.unshift({
-            id: nanoid(8),
-            user: user!,
-            contents: {
-              text: msgText,
-              imageId: msgImage ? storeImage(msgImage.base64 as string) : null,
-              reply: reply
-            },
-            date: dateFormat(new Date())
-          })
-        }
-      )
-
-      updateDoc(newChatRoom, channel)
-      dispatch(setChatRoom(newChatRoom))
-      setMsgText('')
-      setReply(null)
-      setMsgImage(null)
-      setMsgError(null)
+    const newChatMessage: ChatMessage = {
+      id: nanoid(8),
+      user: user,
+      contents: {
+        text: msgData.text ?? '',
+        imageId: msgData.image ? storeImage(msgData.image).imageId : null,
+        reply: msgData.reply
+      },
+      date: dateFormat(new Date())
     }
+
+    const newChatRoom = Automerge.change<ChatDoc>(
+      chatDoc,
+      'Send Message',
+      (currChatRoom) => {
+        if (!currChatRoom.messages) currChatRoom.messages = []
+
+        currChatRoom.messages.unshift(newChatMessage)
+      }
+    )
+
+    updateDoc(newChatRoom, channel)
+    dispatch(setChatRoom(newChatRoom))
   }
 
-  const roomTitle = `Room: ${props.roomData.title}`
-
-  const listChatMessages = (
-    <List id='chat-window-messages'>
-      {chatRoom.messages?.map((message) => (
-        <Bubble
-          key={message.id}
-          id={message.id}
-          message={message}
-          onReply={(reply) => setReply(reply)}
-          onMoveToReply={(reply) => {
-            const replyEl = document.getElementById(reply.messageId)
-            replyEl?.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center'
-            })
-          }}
-        />
-      ))}
-    </List>
-  )
+  const roomTitle = `Room: ${activeRoom?.title}`
 
   return (
     <Fragment>
@@ -159,53 +107,13 @@ const Chat: React.FC<Props> = ({ ...props }) => {
             </Typography>
             <Divider />
             <Grid container spacing={4} alignItems='center'>
-              <Grid id='chat-window' xs={12} item>
-                {listChatMessages}
+              <Grid id='chat-window' sx={{height: '38rem'}} xs={12} item>
+                <ChatScroll />
               </Grid>
               <Grid xs={12} item>
                 <Grid container>
                   <Grid xs={12} item>
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: '1rem'
-                      }}
-                    >
-                      <IconFileUpload
-                        accept='image/png, image/jpeg'
-                        onChange={(e) => handleMsgImageChange(e)}
-                      />
-                      <Box
-                        sx={{ position: 'relative', flexGrow: '1' }}
-                        style={{ paddingLeft: 0 }}
-                      >
-                        {reply && (
-                          <ReplyBox onClose={() => setReply(null)}>
-                            {reply.username}
-                          </ReplyBox>
-                        )}
-                        <TextField
-                          inputRef={(input) => input && reply && input.focus()}
-                          fullWidth
-                          onChange={(e) => setMsgText(e.target.value)}
-                          onKeyDown={(e) => handleEnterKey(e)}
-                          value={msgText}
-                          label='Type your message...'
-                          helperText={msgImage?.fileName || msgError || ''}
-                          variant='outlined'
-                        />
-                      </Box>
-                      <IconButton
-                        onClick={sendMessage}
-                        aria-label='send'
-                        color='primary'
-                        disabled={msgText === '' && msgImage === null}
-                      >
-                        <SendIcon />
-                      </IconButton>
-                    </Box>
+                    <ChatInput onSendMessage={(data) => sendMessage(data)} />
                   </Grid>
                 </Grid>
               </Grid>

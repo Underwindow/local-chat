@@ -21,26 +21,31 @@ export interface ChatMessage {
   contents: MessageContent;
 }
 
-export interface ChatRoomDoc {
+export interface ChatDoc {
   messages: ChatMessage[];
 }
 
 export interface ChatRoomState {
-  chatRoom: ChatRoomDoc;
+  chatDoc: ChatDoc;
+  reply: Reply | null;
 }
 
 const initialState: ChatRoomState = {
-  chatRoom: Automerge.init<ChatRoomDoc>(),
+  chatDoc: Automerge.init<ChatDoc>(),
+  reply: null
 };
 
 export const chatRoomSlice = createSlice({
   name: 'chat-room',
   initialState,
   reducers: {
-    setChatRoom: (state, action: PayloadAction<ChatRoomDoc>) => {
-      state.chatRoom = action.payload;
+    setChatRoom: (state, action: PayloadAction<ChatDoc>) => {
+      state.chatDoc = action.payload;
+    },
+    setReply: (state, action: PayloadAction<Reply | null>) => {
+      state.reply = action.payload;
     },
   },
 });
 
-export const { setChatRoom } = chatRoomSlice.actions;
+export const { setChatRoom, setReply } = chatRoomSlice.actions;

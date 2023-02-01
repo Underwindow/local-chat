@@ -58,7 +58,7 @@ const App: React.FC = () => {
         >
           <Toolbar />
           <Container maxWidth='lg' sx={{ mt: 4 }}>
-            <Chat roomData={activeRoom} username={user.name} />
+            <Chat user={user} />
           </Container>
         </Box>
       )}

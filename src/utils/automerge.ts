@@ -1,8 +1,8 @@
 import * as Automerge from '@automerge/automerge';
 import { StorageJSON, localStorageJSON } from '@/utils/storage';
 
-export function updateDoc<T>(
-  newDoc: Automerge.Doc<T>,
+export function updateDoc<TDoc>(
+  newDoc: Automerge.Doc<TDoc>,
   channel: BroadcastChannel
 ) {
   const binary = Automerge.save(newDoc);

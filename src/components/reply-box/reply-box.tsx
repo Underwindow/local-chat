@@ -22,7 +22,7 @@ const ReplyBox: React.FC<Props> = ({ children, onClose }) => {
       <AppBar position='relative' color='transparent'>
         <Toolbar>
           <Typography variant='h6' component='div' overflow='hidden' noWrap>
-            Replay to: {children}
+            Reply to: {children}
           </Typography>
           <Box sx={{ flexGrow: 1 }} />
           <IconButton onClick={() => onClose()}>

@@ -1,21 +1,51 @@
 .bubble {
+  gap: 4px;
+
+  &__sender {
+    height: calc(100% - 11px);
+  }
+
+  &__content {
+    cursor: pointer;
+  }
+
+  &__text {
+    color: black;
+  }
+  &__text:hover {
+    color: #757ce8;
+  }
+
   &__image {
+    display: flex;
     width: 200px;
     height: 200px;
     object-fit: cover;
   }
 
+  span:first-child {
+    inline-size: 95%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    hyphens: auto;
+  }
+
   &__reply {
+    color: gray;
     cursor: pointer;
+
+    max-width: 80%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    border-left: 1px solid;
+    padding-left: 10px;
+    margin-left: 10px;
+    font-size: 0.875rem;
   }
 
   &__reply:hover {
     color: #757ce8;
-    &::before{
-      content: "\'";
-    }
-    &::after{
-      content: "\' Move to original";
-    }
   }
 }
